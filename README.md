@@ -6,6 +6,4 @@ All reusable code is in .h files, and test*.cpp files allow testing various part
 
 The code has been reasonably tested, but no guarantees are made about its quality or behavior. I.e. the code is provided "as is", without any implicit warranty of merchantability. So don't use it in pacemakers, nuclear reactors, etc.
 
-I added a sample chapter for preview based on a reader's helpful suggestion. Beware that it's in full color while the book is printed in black and white.
-
 Github seems to have a bug in downloading the slides--the best way to get them is to download the entire repository.
