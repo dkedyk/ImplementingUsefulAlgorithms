@@ -203,8 +203,8 @@ public:
     //header blocks not included in size
     long long getSize()const{return size - getNHeaderBlocks();}
     BlockFile(string const& filename, int theBlockSize, int cacheSize,
-        int theHeaderSize = 0): f(filename.c_str(), false),
-        size(0), headerSize(theHeaderSize), blockSize(theBlockSize),
+        int theHeaderSize = 0): f(filename.c_str(), false), size(0),
+        headerSize(theHeaderSize), blockSize(theBlockSize),
         cache(*this, cacheSize)
     {
         assert(blockSize > 0);
@@ -221,8 +221,7 @@ public:
         }
         else
         {//append header blocks and write blockSize to own header
-            for(int i = 0; i < getNHeaderBlocks(); ++i)
-                appendEmptyBlock();
+            for(int i = 0; i < getNHeaderBlocks(); ++i) appendEmptyBlock();
             setHelper(ReinterpretEncode(blockSize, SELF_HEADER_SIZE), 0, 0);
         }
     }

@@ -23,8 +23,7 @@ template<typename KEY, typename VALUE, typename COMPARATOR =
 public:
     SkipList(COMPARATOR const& theC = COMPARATOR()): currentLevel(0), c(theC)
         {for(int i = 0; i < MAX_HEIGHT; ++i) head[i] = 0;}
-    SkipList(SkipList const& rhs): currentLevel(0),
-        c(rhs.c)
+    SkipList(SkipList const& rhs): currentLevel(0), c(rhs.c)
     {//order of items with nonunique keys in copy is reversed
         for(int i = 0; i < MAX_HEIGHT; ++i) head[i] = 0;
         for(Node* node = rhs.head[0]; node; node = node->tower[0])
@@ -95,7 +94,7 @@ public:
     Iterator insert(KEY const& key, VALUE const& value, bool unique = true)
     {
         if(unique)
-        {
+        {//for unique keys check if one already exists
             Iterator result = findNode(key);
             if(result != end())
             {
@@ -104,8 +103,7 @@ public:
             }
         }//level = height - 1
         int newLevel = min<int>(MAX_HEIGHT, GlobalRNG().geometric(0.632)) - 1;
-        Node* newNode = new(f.allocate())Node(key, value,
-            newLevel + 1);
+        Node* newNode = new(f.allocate())Node(key, value, newLevel + 1);
         if(currentLevel < newLevel) currentLevel = newLevel;
         Node** tower = head;
         for(int level = currentLevel; level >= 0; --level)

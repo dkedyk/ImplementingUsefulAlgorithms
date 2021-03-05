@@ -53,9 +53,8 @@ public:
     void finalize()
     {
         counts = bitset.getStorage();
-        for(long long i = 0; i < bitset.wordSize(); ++i)
-            counts[i] = popCountWord(bitset.getStorage()[i]) +
-                (i == 0 ? 0 : counts[i-1]);
+        for(long long i = 0; i < bitset.wordSize(); ++i) counts[i] =
+            popCountWord(bitset.getStorage()[i]) + (i == 0 ? 0 : counts[i-1]);
     }
     long long rank(long long i)
     {

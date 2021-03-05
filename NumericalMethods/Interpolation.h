@@ -223,7 +223,7 @@ public:
         for(int i = 1; i - 1 < ci.getSize(); ++i)
             result.append(((i - 1 > 0 ? 1 : 2) * ci[i - 1] -
                 (i + 1 > ci.getSize() - 1 ? 0 : ci[i + 1]))/2/i);
-                ChebFunction cf(*this);
+        ChebFunction cf(*this);
         cf.ci = result;
         cf.ci[0] -= cf(-1);
         return cf;
@@ -256,7 +256,7 @@ public:
         if(n == 0) return Vector<double>(1, 0);//all 0 case
         else if(n == 1) return Vector<double>();//no roots constant poly
         //setup colleague matrix
-        Matrix<double> colleague(n, n);//
+        Matrix<double> colleague(n, n);
         colleague(0, 1) = 1;
         for(int r = 1; r < n; ++r)
         {

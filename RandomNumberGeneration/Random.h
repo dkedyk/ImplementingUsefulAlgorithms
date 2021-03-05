@@ -127,7 +127,7 @@ template<typename GENERATOR = QualityXorshift64> struct Random
         Vector<int> result;
         for(int considered = 0, selected = 0; selected < k; ++considered)
             if(bernoulli(double(k - selected)/(n - considered)))
-            {
+            {//select
                 result.append(considered);
                 ++selected;
             }
@@ -151,7 +151,7 @@ template<typename GENERATOR = QualityXorshift64> struct Random
     {
         double x = uniform(-1, 1), y = uniform(-1, 1);
         while(x * x + y * y > 1)
-        {
+        {//regenerate if repeated
             x = uniform(-1, 1);
             y = uniform(-1, 1);
         }
@@ -277,9 +277,9 @@ template<typename ITEM> struct ReservoirSampler
     void processItem(ITEM const& item)
     {
         ++nProcessed;
-        if(selected.getSize() < k) append(item);
+        if(selected.getSize() < k) append(item);//select first k
         else
-        {
+        {//replace random
             int kickedOut = GlobalRNG().mod(nProcessed);
             if(kickedOut < k) selected[kickedOut] = item;
         }
@@ -317,21 +317,21 @@ struct NormalSummary: public ArithmeticType<NormalSummary>
     explicit NormalSummary(double theMean = 0, double theVariance = 0):
         mean(theMean), variance(theVariance){assert(variance >= 0);}
     NormalSummary operator+=(NormalSummary const& b)
-    {
+    {//for sum add means and variances
         mean += b.mean;
         variance += b.variance;
         return *this;
     }
     NormalSummary operator-=(NormalSummary const& b)
-    {
+    {//for difference subtract means but add variances
         mean -= b.mean;
         variance += b.variance;
         return *this;
     }
     NormalSummary operator*=(double a)
-    {
+    {//scale both mean and variance
         mean *= a;
-        variance *= a * a;//change f code and description
+        variance *= a * a;
         return *this;
     }
 };
@@ -347,7 +347,7 @@ struct IncrementalStatistics
         max(0.0, (squaredSum - sum * getMean())/(n - 1.0));}
     double stdev()const{return sqrt(getVariance());}
     void addValue(double x)
-    {
+    {//update incremental variables
         ++n;
         maximum = max(maximum, x);
         minimum = min(minimum, x);

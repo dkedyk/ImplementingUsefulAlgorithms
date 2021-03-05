@@ -69,8 +69,8 @@ template<typename CONSTRAINT> struct ConstraintGraph
         Vector<bool> onQ(g.nVertices(), true);
         for(int j = 0; j < g.nVertices(); ++j)
             if(!SAC3Helper(j, q, onQ, true)) return false;
-        while(!q.isEmpty())if(!SAC3Helper(q.pop(), q, onQ, false))
-            return false;
+        while(!q.isEmpty())
+            if(!SAC3Helper(q.pop(), q, onQ, false)) return false;
         return true;
     }
 };

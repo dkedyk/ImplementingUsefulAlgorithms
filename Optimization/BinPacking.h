@@ -78,7 +78,7 @@ Vector<Vector<int> > firstFitDecreasing(PROBLEM const& p, int n)
     for(int i = 0; i < n; ++i)
     {
         items[i].first = p.getWeight(i);
-        assert(items[i].first <= binSize);//else bac problem
+        assert(items[i].first <= binSize);//else bad problem
         items[i].second = i;
     }
     quickSort(items.getArray(), 0, n - 1,

@@ -113,7 +113,7 @@ public:
     typedef typename HASHER::WORD_TYPE WORD_TYPE;
     unsigned long long max()const{return h.max();}
     template<typename WORD> unsigned long long operator()(WORD x)const
-        {return hash(x, is_integral<WORD>());}//intergral words only
+        {return hash(x, is_integral<WORD>());}//integral words only
     class Builder
     {
         enum{K = sizeof(WORD_TYPE)};

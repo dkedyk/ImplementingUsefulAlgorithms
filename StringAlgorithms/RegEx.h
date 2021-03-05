@@ -6,22 +6,17 @@
 #include "../Utils/Bits.h"
 #include "../Graphs/Graph.h"
 namespace igmdk{
-//Beware that the below code, though in principle correct, has a bug that I
-//haven't had the time to fix. See the tests on the book's website for a
-//failing use case
+
 class RegularExpressionMatcher
 {
     string re;
     int m;
-    GraphAA<bool> g;
-
-    Vector<int> findActiveStates(Vector<int> sources = Vector<int>())
+    GraphAA<bool> g;//dummy edge data
+    Vector<int> findActiveStates(Vector<int> const& sources)
     {
         Vector<bool> visited(g.nVertices(), false);
         DefaultDFSAction a;
-        if(sources.getSize() == 0) DFSComponent(g, 0, visited, a);
-        else for(int i = 0; i < sources.getSize(); ++i)
-            if(!visited[sources[i]])
+        for(int i = 0; i < sources.getSize(); ++i) if(!visited[sources[i]])
             {
                 visited[sources[i]] = true;
                 DFSComponent(g, sources[i], visited, a);
@@ -46,23 +41,23 @@ public:
                 if(re[clauseOp] == '|')
                 {
                     clauseStart = clauses.pop();
-                    g.addEdge(clauseStart, clauseOp+1);
+                    g.addEdge(clauseStart, clauseOp + 1);
                     g.addEdge(clauseOp, i);
                 }
                 else clauseStart = clauseOp;
             }
-            if(i < m - 1 && re[i + 1]=='*')
+            if(i < m - 1 && re[i + 1]=='*')//to next start from clause start
                 g.addUndirectedEdge(clauseStart, i + 1);
             if(re[i] == '(' || re[i] == '*' || re[i] == ')')
-                g.addEdge(i, i + 1);
+                g.addEdge(i, i + 1);//to next state from current
         }
     }
 
     bool matches(string const& text)
     {
-        Vector<int> activeStates = findActiveStates();
-        for(int i = 0; i < text.length(); ++i)
-        {
+        Vector<int> activeStates = findActiveStates(Vector<int>(1, 0));
+        for(int i = 0; i < text.length() && activeStates.getSize() > 0; ++i)
+        {//must be in >= 1 active state to keep going
             Vector<int> stillActive;
             for(int j = 0; j < activeStates.getSize(); ++j)
                 if(activeStates[j] < m && re[activeStates[j]] == text[i])

@@ -104,12 +104,9 @@ public:
     }
 };
 
-//Beware that the below code, though in principle correct, has a bug that I
-//haven't had the time to fix. See the tests on the book's website for a
-//failing use case
 class LDPC
 {
-    BooleanMatrix a, g;//sparcity of A not exploited here
+    BooleanMatrix a, g;//sparsity of A not exploited here
     struct H0Functor//for numerical solving for p
     {
         double hValue;

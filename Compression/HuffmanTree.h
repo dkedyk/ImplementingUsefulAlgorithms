@@ -87,8 +87,7 @@ struct HuffmanTree
     }
 
     Vector<unsigned char> decode(BitStream& text)
-    //wrong bits will give wrong result, but not a crash
-    {
+    {//wrong bits will give wrong result, but not a crash
         Vector<unsigned char> result;
         for(Node* current = root;;
             current = text.readBit() ? current->right : current->left)

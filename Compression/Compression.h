@@ -10,7 +10,7 @@ namespace igmdk{
 
 enum {RLE_E1 = (1 << numeric_limits<unsigned char>::digits) - 1,
     RLE_E2 = RLE_E1 - 1};
-Vector<unsigned char> RLECompress(Vector<unsigned char>const& byteArray)
+Vector<unsigned char> RLECompress(Vector<unsigned char> const& byteArray)
 {
     Vector<unsigned char> result;
     for(int i = 0; i < byteArray.getSize();)
@@ -30,7 +30,7 @@ Vector<unsigned char> RLECompress(Vector<unsigned char>const& byteArray)
     }
     return result;
 }
-Vector<unsigned char> RLEUncompress(Vector<unsigned char>const& byteArray)
+Vector<unsigned char> RLEUncompress(Vector<unsigned char> const& byteArray)
 {
     Vector<unsigned char> result;
     for(int i = 0; i < byteArray.getSize();)
@@ -49,7 +49,7 @@ Vector<unsigned char> RLEUncompress(Vector<unsigned char>const& byteArray)
 }
 
 Vector<unsigned char> MoveToFrontTransform(bool compress,
-    Vector<unsigned char>const& byteArray)
+    Vector<unsigned char> const& byteArray)
 {
     unsigned char list[1 << numeric_limits<unsigned char>::digits], j, letter;
     for(int i = 0; i < sizeof(list); ++i) list[i] = i;
@@ -100,8 +100,7 @@ Vector<unsigned char> BurrowsWheelerReverseTransform(
      Vector<unsigned char> const& byteArray)
 {
     enum{M = 1 << numeric_limits<unsigned char>::digits};
-    int counts[M], firstPositions[M],
-        textSize = byteArray.getSize() - 4;
+    int counts[M], firstPositions[M], textSize = byteArray.getSize() - 4;
     for(int i = 0; i < M; ++i) counts[i] = 0;
     Vector<int> ranks(textSize);//compute ranks
     for(int i = 0; i < textSize; ++i) ranks[i] = counts[byteArray[i]]++;
@@ -116,12 +115,12 @@ Vector<unsigned char> BurrowsWheelerReverseTransform(
     return result;
 }
 
-Vector<unsigned char> BWTCompress(Vector<unsigned char>const& byteArray)
+Vector<unsigned char> BWTCompress(Vector<unsigned char> const& byteArray)
 {
     return HuffmanCompress(RLECompress(MoveToFrontTransform(true,
         BurrowsWheelerTransform(byteArray))));
 }
-Vector<unsigned char> BWTUncompress(Vector<unsigned char>const& byteArray)
+Vector<unsigned char> BWTUncompress(Vector<unsigned char> const& byteArray)
 {
     return BurrowsWheelerReverseTransform(MoveToFrontTransform(false,
        RLEUncompress(HuffmanUncompress(byteArray))));

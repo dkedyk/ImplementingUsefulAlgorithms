@@ -727,8 +727,7 @@ Vector<complex<double> > QREigenHessenberg(Matrix<double> A,
     while(maxIter--)
     {//process converged entries
         for(int c = 0; c < n - 1; ++c) if(abs(A(c + 1, c)) <= prec *
-            (abs(A(c, c)) + abs(A(c + 1, c + 1))))
-                A(c + 1, c) = 0;
+            (abs(A(c, c)) + abs(A(c + 1, c + 1)))) A(c + 1, c) = 0;
         //deflate
         while(n >= 3)
         {

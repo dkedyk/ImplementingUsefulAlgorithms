@@ -15,13 +15,13 @@ typename COMPARATOR = DefaultComparator<KEY> > class LinearProbingHashTable
     COMPARATOR c;
     enum{MIN_CAPACITY = 8};//for efficiency require at least size 8
     void allocateTable()
-    {
+    {//create an unoccupied table of size capacity
         h = HASHER(capacity);
         size = 0;
         table = rawMemory<Node>(capacity);
         isOccupied = new bool[capacity];
         for(int i = 0; i < capacity; ++i) isOccupied[i] = false;
-    }
+    }//helper to remove an unused table
     static void cleanUp(Node* theTable, int theCapacity, bool* isOccupied)
     {//destruct the occupied nodes, and deallocate the arrays
         for(int i = 0; i < theCapacity; ++i)
@@ -42,12 +42,12 @@ typename COMPARATOR = DefaultComparator<KEY> > class LinearProbingHashTable
         bool* oldIsOccupied = isOccupied;
         capacity = nextPowerOfTwo(size * 2);
         allocateTable();
-        for(int i = 0; i < oldCapacity; ++i)
+        for(int i = 0; i < oldCapacity; ++i)//reinsert
             if(oldIsOccupied[i]) insert(oldTable[i].key, oldTable[i].value);
-        cleanUp(oldTable, oldCapacity, oldIsOccupied);
+        cleanUp(oldTable, oldCapacity, oldIsOccupied);//remove old table
     }
     int findNode(KEY const& key)
-    {
+    {//find the cell where the key would belong if inserted
         int cell = h(key);
         for(; isOccupied[cell] && !c.isEqual(key, table[cell].key);
             cell = (cell + 1) % capacity);
@@ -78,12 +78,12 @@ public:
     void insert(KEY const& key, VALUE const& value)
     {
         int cell = findNode(key);
-        if(isOccupied[cell]) table[cell].value = value;
+        if(isOccupied[cell]) table[cell].value = value;//update
         else
-        {
+        {//insert
             new(&table[cell])Node(key, value);
             isOccupied[cell] = true;
-            if(++size > capacity * 0.8) resize();
+            if(++size > capacity * 0.8) resize();//resize if reach a
         }
     }
     void remove(KEY const& key)
@@ -91,14 +91,14 @@ public:
         int cell = findNode(key);
         if(isOccupied[cell])
         {//reinsert subsequent nodes in the found value's chain
-            destroy(cell);
+            destroy(cell);//remove item
             if(size < capacity * 0.1 && size * 2 >= MIN_CAPACITY) resize();
-            else
+            else//reinsert chain
                 while(isOccupied[cell = (cell + 1) % capacity])
                 {
                     Node temp = table[cell];
-                    destroy(cell);
-                    insert(temp.key, temp.value);
+                    destroy(cell);//destroy item
+                    insert(temp.key, temp.value);//reinsert it
                 }
         }
     }//below optimized algorithm has bug somewhere - will debug later
@@ -148,10 +148,8 @@ public:
             advance();
             return *this;
         }
-        NodeType& operator*()const
-            {assert(i < t.capacity); return t.table[i];}
-        NodeType* operator->()const
-            {assert(i < t.capacity); return &t.table[i];}
+        NodeType& operator*()const{assert(i < t.capacity); return t.table[i];}
+        NodeType* operator->()const{assert(i < t.capacity);return &t.table[i];}
         bool operator==(Iterator const& rhs)const{return i == rhs.i;}
     };
     Iterator begin(){return Iterator(*this);}

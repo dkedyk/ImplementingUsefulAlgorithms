@@ -43,7 +43,7 @@ public:
                 }
                 v[vIndex(i, j)] = value;
             }
-        next();
+        next();//generate first value
     }
     void next()
     {

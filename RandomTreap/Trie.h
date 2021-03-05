@@ -62,7 +62,7 @@ template<typename ITEM, typename KEY_OBJECT = unsigned char, typename
     {
         if(!left) return right;
         if(!right) return left;
-        if(left->priority < right->priority)
+        if(left->priority < right->priority)//lower priority goes up
         {
             left->right = join(left->right, right);
             return left;
@@ -88,8 +88,7 @@ template<typename ITEM, typename KEY_OBJECT = unsigned char, typename
             {//go to next node
                 Node** child;
                 if(isEqual){child = &node->next; ++i;}
-                else if(c(key[i], node->pivot))
-                    child = &node->left;
+                else if(c(key[i], node->pivot)) child = &node->left;
                 else child = &node->right;
                 *child = removeR(*child, key, keySize, i);
             }
@@ -125,8 +124,7 @@ template<typename ITEM, typename KEY_OBJECT = unsigned char, typename
         {
             result = new(nodeF.allocate())Node(node->pivot);
             result->priority = node->priority;
-            if(node->item)
-                result->item = new(itemF.allocate())ITEM(node->item);
+            if(node->item)result->item = new(itemF.allocate())ITEM(node->item);
             result->left = constructFrom(node->left);
             result->next = constructFrom(node->next);
             result->right = constructFrom(node->right);
@@ -162,8 +160,7 @@ public:
                 if(i == keySize - 1) break;//reached last key object
                 else {node = node->next; ++i;}
             }
-            else if(c(key[i], node->pivot))
-                node = node->left;
+            else if(c(key[i], node->pivot)) node = node->left;
             else node = node->right;
         return result ? result->item : 0;
     }

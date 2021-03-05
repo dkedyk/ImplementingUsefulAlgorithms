@@ -293,9 +293,7 @@ template<typename EVALUATOR> struct SymmetricPermutationILSFromRandReverseMove
         {return solveSymmetricPermutationLocalSearchReverse(e, x, lsMoves);}
     double getScore(X const& x){return e(x);}
     void bigMove(X& x)
-    {
-        GlobalRNG().randomPermutation(x.getArray(), x.getSize());
-    }
+        {GlobalRNG().randomPermutation(x.getArray(), x.getSize());}
 };
 template<typename INSTANCE>
 Vector<int> solveSymmetricPermutationIteratedLocalSearch(INSTANCE const&
@@ -316,10 +314,8 @@ template<typename EVALUATOR> struct SubsetILSFromRandFlipMove
     X localSearchBest(X const& x)
         {return solveSubsetLocalSearchFlip(e, x, lsMoves);}
     double getScore(X const& x){return e(x);}
-    void bigMove(X& x)
-    {//simple restart
-        for(int i = 0; i < x.getSize(); ++i) x[i] = GlobalRNG().mod(2);
-    }
+    void bigMove(X& x)//simple restart
+        {for(int i = 0; i < x.getSize(); ++i) x[i] = GlobalRNG().mod(2);}
 };
 template<typename INSTANCE> Vector<bool> solveSubsetIteratedLocalSearch(
     INSTANCE const& instance, Vector<bool> const& initial, int lsMaxMoves,

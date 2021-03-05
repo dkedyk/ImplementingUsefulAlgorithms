@@ -12,8 +12,7 @@ void insertionSort(ITEM* vector, int left, int right, COMPARATOR const& c)
     {
         ITEM e = vector[i];
         int j = i;
-        for(;j > left && c(e, vector[j - 1]); --j)
-            vector[j] = vector[j - 1];
+        for(;j > left && c(e, vector[j - 1]); --j) vector[j] = vector[j - 1];
         vector[j] = e;
     }
 }
@@ -257,25 +256,26 @@ template<typename ITEM, typename COMPARATOR> int binarySearch(ITEM const*
 }
 
 template<typename ITEM> void permutationSort(ITEM* a, int* permutation, int n)
-{
+{//need permutation to be valid, else get an infinite loop
     for(int i = 0; i < n; ++i) if(permutation[i] != i)
         {//start cycle
             ITEM temp = a[i];
             int to = i;
-            while(permutation[to] != to)
+            do
             {
-                a[to] = a[permutation[to]];
-                swap(permutation[to], to);//mark to processed and advance cycle
-            }
+                a[to] = a[permutation[to]];//put element in right place
+                swap(permutation[to], to);//mark to done, and advance cycle
+            }while(permutation[to] != i);//until find what goes to i
             a[to] = temp;//complete cycle
+            permutation[to] = to;//becomes identity
         }
 }
 
 void countingSort(int* vector, int n, int N)
 {
     Vector<int> counter(N, 0);
-    for(int i = 0; i < n; ++i) ++counter[vector[i]];
-    for(int i = 0, index = 0; i < N; ++i)
+    for(int i = 0; i < n; ++i) ++counter[vector[i]];//count
+    for(int i = 0, index = 0; i < N; ++i)//create in order
         while(counter[i]-- > 0) vector[index++] = i;
 }
 

@@ -96,6 +96,19 @@ void testWuManberAuto()
     DEBUG("testWuManberAuto passed");
 }
 
+void testREAuto()
+{
+    DEBUG("testRE");
+    string reS = "((A*B|AC)D)";
+    RegularExpressionMatcher re(reS);
+    assert(!re.matches("ABCCBD"));
+    assert(!re.matches("BCD"));
+    assert(re.matches("ABD"));
+    assert(re.matches("ACD"));
+    assert(re.matches("AABD"));
+    DEBUG("testREAuto Passed");
+}
+
 void testShiftAndExtendedAuto()
 {
     DEBUG("testShiftAndAutoExtended");
@@ -188,6 +201,27 @@ void testSuffixIndexAuto()
     DEBUG("testSuffixIndexAuto passed");
 }
 
+void testSuffixIndexAuto2()
+{
+    DEBUG("testSuffixIndexAuto2");
+    string s = "aaa";
+    int n = s.length();
+    Vector<char> w(n, 0);
+    for(int i = 0; i < n; ++i) w[i] = s[i];
+    SuffixIndex<char> index(w);
+    assert(index.sa[0] == 2);//"a"
+    assert(index.lcpa[0] == 1);//"aaa" vs "a"
+    assert(index.sa[1] == 1);//"aa"
+    assert(index.lcpa[1] == 1);//"a" vs "aa"
+    assert(index.sa[2] == 0);//"aaa"
+    assert(index.lcpa[2] == 2);//"aa" vs "aaa"
+    string p = "a";
+    pair<int, int> lr = index.interval((char*)p.c_str(), p.length());
+    assert(lr.first == 0);
+    assert(lr.second == 2);
+    DEBUG("testSuffixIndexAuto2 passed");
+}
+
 template<typename CHAR> struct BWTTestComparator
 {
     CHAR const*const s;
@@ -220,9 +254,11 @@ void testAllAutoStringAlgorithms()
     DEBUG("testAllAutoStringAlgorithms");
     testHashQAuto();
     testWuManberAuto();
+    testREAuto();
     testShiftAndExtendedAuto();
     testDiffAuto();
     testSuffixIndexAuto();
+    testSuffixIndexAuto2();
     testBWTAuto();
 }
 

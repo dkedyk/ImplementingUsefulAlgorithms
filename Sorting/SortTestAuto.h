@@ -53,6 +53,19 @@ void testMergesortAuto()
     DEBUG("testMergesortAuto passed");
 }
 
+void testPermutationSortAuto()
+{
+    DEBUG("testPermutationSortAuto");
+    char v[4] = {'a', 'b', 'c', 'd'};
+    int p[4] = {3, 2, 1, 0};
+    permutationSort(v, p, 4);
+    assert(v[0] == 'd');
+    assert(v[1] == 'c');
+    assert(v[2] == 'b');
+    assert(v[3] == 'a');
+    DEBUG("testPermutationSortAuto passed");
+}
+
 void testCountingsortAuto()
 {
     DEBUG("testCountingsortAuto");
@@ -137,6 +150,7 @@ void testAllAutoSort()
     DEBUG("testAllAutoSort");
     testQuicksortAuto();
     testMergesortAuto();
+    testPermutationSortAuto();
     testCountingsortAuto();
     testKsortAuto();
     testQuickselect();

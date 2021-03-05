@@ -241,11 +241,10 @@ template<typename GRAPH> Vector<int> MST(GRAPH& g)
         for(typename GRAPH::AdjacencyIterator j = g.begin(i); j != g.end(i);
             ++j)
         {//adjust best known distances to child vertices not yet in the tree
-            int to = j.to();
-            QNode const* child = pQ.find(to);//child may no longer be in q
+            QNode const* child = pQ.find(j.to());//child may no longer be in q
             if(child && j.data() < child->first)
             {
-                pQ.changeKey(QNode(j.data(), to), to);
+                pQ.changeKey(QNode(j.data(), j.to()), j.to());
                 parents[j.to()] = i;//update to closer parent
             }
         }
@@ -270,12 +269,11 @@ Vector<int> ShortestPath(GRAPH& g, int from, int dest = -1)
             ++j)
         {//child may no longer be in q
             double newChildDistance = dj + j.data();
-            int to = j.to();
-            QNode const* child = pQ.find(to);
+            QNode const* child = pQ.find(j.to());
             if(child && newChildDistance < child->first)
             {
-                pQ.changeKey(QNode(newChildDistance, to), to);
-                pred[to] = i;//new best parent
+                pQ.changeKey(QNode(newChildDistance, j.to()), j.to());
+                pred[j.to()] = i;//new best parent
             }
         }
     }

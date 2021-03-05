@@ -15,15 +15,14 @@ template<typename ITEM, typename COMPARATOR = DefaultComparator<ITEM>,
     void moveUp(int i)
     {
         ITEM temp = items[i];
-        for(int parent; i > 0 && c(temp, items[parent =
-             getParent(i)]); i = parent) r(items[i] = items[parent], i);
+        for(int parent; i > 0 && c(temp, items[parent = getParent(i)]);
+            i = parent) r(items[i] = items[parent], i);
         r(items[i] = temp, i);
     }
     void moveDown(int i)
     {
         ITEM temp = items[i];
-        for(int child; (child = getLeftChild(i)) < items.getSize();
-            i = child)
+        for(int child; (child = getLeftChild(i)) < items.getSize(); i = child)
         {//find smaller child
             int rightChild = child + 1;
             if(rightChild < items.getSize() && c(items
@@ -51,7 +50,7 @@ public:
         moveUp(items.getSize() - 1);
     }
     ITEM const& operator[](int i)const
-    {
+    {//random access is useful with item handles
         assert(i >= 0 && i < items.getSize());
         return items[i];
     }

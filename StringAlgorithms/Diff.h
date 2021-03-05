@@ -51,8 +51,7 @@ private:
         Vector<int> frontierX(size, -2);
         Vector<Edit*> edits(size, 0);
         Freelist<Edit> f;
-        int p = 0;
-        for(; frontierX[mainDiagonal] < N - 1; ++p)
+        for(int p = 0; frontierX[mainDiagonal] < N - 1; ++p)
         {//from lower left to main
             for(int d = M + 1 - p; d < mainDiagonal; ++d)
                 extendDiagonal(d, frontierX, edits, a, b, f);

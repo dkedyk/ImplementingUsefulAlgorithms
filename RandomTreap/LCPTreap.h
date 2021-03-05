@@ -69,8 +69,7 @@ template<typename KEY, typename VALUE, typename INDEXED_COMPARATOR =
     }
 public:
     typedef Node NodeType;
-    LCPTreap(INDEXED_COMPARATOR theC = INDEXED_COMPARATOR()): root(0), c(theC)
-        {}
+    LCPTreap(INDEXED_COMPARATOR theC = INDEXED_COMPARATOR()):root(0), c(theC){}
     LCPTreap(LCPTreap const& other): c(other.c)
         {root = constructFrom(other.root);}
     LCPTreap& operator=(LCPTreap const&rhs){return genericAssign(*this,rhs);}
@@ -82,8 +81,7 @@ public:
         while(node)
         {
             int lcp = findLCP(key, node, predM, m);
-            if(c.getSize(key) == lcp &&
-                c.getSize(node->key) == lcp) break;
+            if(c.getSize(key) == lcp && c.getSize(node->key) == lcp) break;
             if(c(key, node->key, lcp)) node = node->left;
             else
             {
