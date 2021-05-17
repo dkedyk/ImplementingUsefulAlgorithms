@@ -1,4 +1,4 @@
-This code is for the readers of the book, and for personal use only. For commercial use please reach out (my email is in the book's preface and back cover).
+This code is for the readers of the book (see https://www.amazon.com/dp/B08PXHJCXY), and for personal use only. For commercial use please reach out (my email is in the book's preface and back cover).
 
 I ask that you please post an honest review of the book on Amazon.com in return. The feedback I got so far for the previous editions has been limited, and I need it to improve the book further. This is hobby project that is worked on weekends/evenings, so any assistance is greatly appreciated.
 
