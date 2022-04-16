@@ -121,6 +121,7 @@ void testGenerators()
         DEBUG(GlobalRNG().binomial(0.7, 20));
         DEBUG(GlobalRNG().geometric(0.7));
         DEBUG(GlobalRNG().poisson(0.7));
+        DEBUG(GlobalRNG().triangular01(0.7));
 		//system("PAUSE");
 	}
 	int M = 100000;

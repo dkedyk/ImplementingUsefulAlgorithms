@@ -16,10 +16,10 @@ template<typename FUNCTION> pair<Vector<double>, double> hybridLocalMinimize(
 {
     GradientFunctor<FUNCTION> g(f);
     DirectionalDerivativeFunctor<FUNCTION> dd(f);
-    int LBFGSevals = x0.getSize() < 200 ? maxEvals/2 : maxEvals;
+    int D = x0.getSize(), LBFGSevals = D < 200 ? maxEvals/2 : maxEvals;
     pair<Vector<double>, double> result = LBFGSMinimize(x0, f, g, dd,
        LBFGSevals, yPrecision);
-    if(x0.getSize() < 200)
+    if(D > 1 && D < 200)
     {
         int nRestarts = 30;
         NelderMead<FUNCTION> nm(x0.getSize(), f);

@@ -35,24 +35,24 @@ template<typename TEST_SET, typename FUNCTION> void debugResultHelperBatch(
     DEBUG(relAbsYDigits);
     DEBUG(sePercentage);
     DEBUG(TEST_SET::evalCount/k);//ok to round down
-    matrix.lastItem().append(toString(relAbsXDigits));
-    matrix.lastItem().append(toString(relAbsYDigits));
-    matrix.lastItem().append(toString(sePercentage));
-    matrix.lastItem().append(toString(TEST_SET::evalCount/k));
+    matrix.lastItem().append(to_string(relAbsXDigits));
+    matrix.lastItem().append(to_string(relAbsYDigits));
+    matrix.lastItem().append(to_string(sePercentage));
+    matrix.lastItem().append(to_string(TEST_SET::evalCount/k));
     TEST_SET::evalCount = 0;
     double normalizedGradNorm = gn.getMean();
     TEST_SET::evalCount = 0;
     DEBUG(normalizedGradNorm);
-    matrix.lastItem().append(toString(normalizedGradNorm));
+    matrix.lastItem().append(to_string(normalizedGradNorm));
     DEBUG(timediff);
-    matrix.lastItem().append(toString(timediff));
+    matrix.lastItem().append(to_string(timediff));
 }
 
 void createMinReport(string const& prefix,
     Vector<Vector<string> > const& matrix)
 {
     int reportNumber = time(0);
-    string filename = prefix + toString(reportNumber) + ".csv";
+    string filename = prefix + to_string(reportNumber) + ".csv";
     createCSV(matrix, filename.c_str());
     Vector<string> names;
     names.append("XError");

@@ -142,11 +142,11 @@ template<typename LEARNER> int testNumericalClassifier()
 
     DEBUG("Done Reading");
     int reportNumber = time(0);
-    string fAcc = "reportAcc" + toString(reportNumber) + ".csv";
-    string fAveAcc = "reportAveAcc" + toString(reportNumber) + ".csv";
-    string fTimer = "reportTimer" + toString(reportNumber) + ".csv";
-    string fCount = "reportFeature" + toString(reportNumber) + ".csv";
-    string fCost = "reportCost" + toString(reportNumber) + ".csv";
+    string fAcc = "reportAcc" + to_string(reportNumber) + ".csv";
+    string fAveAcc = "reportAveAcc" + to_string(reportNumber) + ".csv";
+    string fTimer = "reportTimer" + to_string(reportNumber) + ".csv";
+    string fCount = "reportFeature" + to_string(reportNumber) + ".csv";
+    string fCost = "reportCost" + to_string(reportNumber) + ".csv";
     ++reportNumber;
     for(int i = 0; i < data.getSize(); ++i)
     {
@@ -175,8 +175,8 @@ template<typename LEARNER> int testNumericalClassifier()
             double cost = evalConfusionCost(confusion, c);
             DEBUG(cost);
             cs.debug();
-            addToCSV(Vector<string>(1, toString(cost)), fCost.c_str());
-            addToCSV(Vector<string>(1, toString(timediff)), fTimer.c_str());*/
+            addToCSV(Vector<string>(1, to_string(cost)), fCost.c_str());
+            addToCSV(Vector<string>(1, to_string(timediff)), fTimer.c_str());*/
         }
         else
         {
@@ -186,10 +186,10 @@ template<typename LEARNER> int testNumericalClassifier()
             double timediff = 1.0 * (clock() - start)/CLOCKS_PER_SEC;
             cs.debug();
 
-            /*addToCSV(Vector<string>(1, toString(cs.acc.mean)), fAcc.c_str());
-            addToCSV(Vector<string>(1, toString(cs.bac.mean)), fAveAcc.c_str());
-            addToCSV(Vector<string>(1, toString(timediff)), fTimer.c_str());*/
-            //addToCSV(Vector<string>(1, toString(s.model.f.fMap.getSize())), fCount.c_str());
+            /*addToCSV(Vector<string>(1, to_string(cs.acc.mean)), fAcc.c_str());
+            addToCSV(Vector<string>(1, to_string(cs.bac.mean)), fAveAcc.c_str());
+            addToCSV(Vector<string>(1, to_string(timediff)), fTimer.c_str());*/
+            //addToCSV(Vector<string>(1, to_string(s.model.f.fMap.getSize())), fCount.c_str());
         }
         //system("PAUSE");
     }

@@ -1,6 +1,6 @@
 #include "Stack.h"
 #include "Queue.h"
-#include "GCFreelist.h"
+#include "GCFreeList.h"
 #include "UtilsTestAuto.h"
 using namespace igmdk;
 

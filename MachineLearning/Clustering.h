@@ -474,9 +474,8 @@ template<typename DATA> Matrix<int> clusterContingencyMatrix(
 {//row is assignment, column is label
     int n = assignments.getSize();
     assert(n == data.getSize());
-    int k = valMax(assignments.getArray(), n) + 1,
-        nClasses = findNClasses(data);
-    Matrix<int> counts(k, nClasses);
+    int k = valMax(assignments.getArray(), n) + 1;
+    Matrix<int> counts(k, findNClasses(data));
     for(int i = 0; i < n; ++i) ++counts(assignments[i], data.getY(i));
     return counts;
 }

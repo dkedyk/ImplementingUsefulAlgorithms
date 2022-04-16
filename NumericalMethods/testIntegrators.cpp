@@ -53,7 +53,7 @@ class IntervalSimpson
     double left, dx, fLeft, fLM, fMiddle, fMR, fRight;
     static double integrateHelper(double f0, double f1, double f2, double dx)
         {return dx * (f0 + 4 * f1 + f2)/3;}
-    template<typename FUNCTION> initHelper(FUNCTION const& f, double a,
+    template<typename FUNCTION> void initHelper(FUNCTION const& f, double a,
         double b, double fa, double fm, double fb)
     {
         left = a;

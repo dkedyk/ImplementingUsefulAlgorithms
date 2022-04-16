@@ -69,10 +69,10 @@ public:
 template<typename VECTOR, typename HASHER = LecroqHash> class WuManber
 {
     enum{CHAR_ALPHABET_SIZE = 1 << numeric_limits<unsigned char>::digits};
+    int q, minPatternSize;
     Vector<pair<VECTOR, int> > const& patterns;
     Vector<int> shifts;//size is a power of 2 for fast hashing
     Vector<Vector<int> > candidates;
-    int q, minPatternSize;
     HASHER h;
     typedef typename HASHER::Builder B;
 public:

@@ -1,6 +1,6 @@
 #ifndef IGMDK_LRU_CACHE_H
 #define IGMDK_LRU_CACHE_H
-#include "../Utils/GCFreelist.h"
+#include "../Utils/GCFreeList.h"
 #include "../HashTable/LinearProbingHashTable.h"
 
 namespace igmdk{

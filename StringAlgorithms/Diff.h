@@ -2,7 +2,7 @@
 #define IGMDK_DIFF_H
 #include "../Utils/Utils.h"
 #include "../Utils/Vector.h"
-#include "../Utils/GCFreelist.h"
+#include "../Utils/GCFreeList.h"
 namespace igmdk{
 
 template<typename CHAR> class Diff

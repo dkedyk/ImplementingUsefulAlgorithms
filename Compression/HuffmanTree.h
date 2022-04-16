@@ -3,7 +3,7 @@
 #include "../Heaps/Heap.h"
 #include "Stream.h"
 #include "StaticCodes.h"
-#include "../Utils/GCFreelist.h"
+#include "../Utils/GCFreeList.h"
 #include <cstdlib>
 namespace igmdk{
 

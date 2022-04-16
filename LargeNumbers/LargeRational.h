@@ -1,5 +1,6 @@
 #ifndef IGMDK_LARGE_RATIONAL_H
 #define IGMDK_LARGE_RATIONAL_H
+#include "LargeNumber.h"
 #include "../Utils/Utils.h"
 #include "../Utils/Debug.h"
 #include "../Utils/Vector.h"

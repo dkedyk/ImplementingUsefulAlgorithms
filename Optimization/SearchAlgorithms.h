@@ -2,8 +2,10 @@
 #define IGMDK_SEARCH_ALGORITHMS_H
 #include "../Utils/Vector.h"
 #include "../Utils/Stack.h"
+#include "../HashTable/ChainingHashTable.h"
 #include "../HashTable/LinearProbingHashTable.h"
 #include "../Heaps/Heap.h"
+#include "../Heaps/IndexedHeap.h"
 #include "../Sorting/Sort.h"
 namespace igmdk{
 
@@ -83,12 +85,12 @@ template<typename PROBLEM> struct AStar
 {//closed set paths stored as parent pointer tree
     typedef typename PROBLEM::STATE_ID STATE_ID;
     typedef typename PROBLEM::HASHER HASHER;
-    typedef ChainingHashTable<STATE_ID, STATE_ID, HASHER> L;
+    typedef ChainingHashTable<STATE_ID, STATE_ID, HASHER> P;
     class PredVisitor
     {
-        L& pred;
+        P& pred;
     public:
-        PredVisitor(L& thePred): pred(thePred){}
+        PredVisitor(P& thePred): pred(thePred){}
         STATE_ID const* getPred(STATE_ID x)const{return pred.find(x);}
         Vector<STATE_ID> getPath(STATE_ID x)const
         {
@@ -110,7 +112,7 @@ template<typename PROBLEM> struct AStar
         typedef pair<double, STATE_ID> QNode;
         IndexedHeap<QNode,
             PairFirstComparator<double, STATE_ID>, STATE_ID, HASHER> pQ;
-        L pred;
+        P pred;
         PredVisitor v(pred);
         bool foundGoal = false;
         STATE_ID j = p.start();//start has no predecessor
@@ -148,8 +150,8 @@ template<typename PROBLEM> struct AStar
 template<typename PROBLEM> struct RecursiveBestFirstSearch
 {
     typedef typename PROBLEM::STATE_ID STATE_ID;
-    typedef Stack<STATE_ID> L;
-    L pred;//path to the goal, which is top
+    typedef Stack<STATE_ID> P;
+    P pred;//path to the goal, which is top
     PROBLEM const& p;
     enum{SUCCESS = -1, FAILURE = -2};
     typedef pair<double, STATE_ID> INFO;//lower bound and state
@@ -159,7 +161,7 @@ template<typename PROBLEM> struct RecursiveBestFirstSearch
     {//assume top of stack always current node, so pred is next
         Stack<STATE_ID>& pred;
     public:
-        PredVisitor(L& thePred): pred(thePred){}
+        PredVisitor(P& thePred): pred(thePred){}
         STATE_ID const* getPred(STATE_ID dummy)const
         {
             Vector<STATE_ID>& storage = pred.storage;

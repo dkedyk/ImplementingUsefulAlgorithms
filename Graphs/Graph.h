@@ -105,7 +105,7 @@ template<typename GRAPH, typename ACTION> void DFSComponent(GRAPH const& g,
     int source, Vector<bool>& visited, ACTION& a = ACTION())
 {
     typedef typename GRAPH::AdjacencyIterator ITER;
-    Stack<pair<ITER, int> > s;
+    Stack<pair<ITER, int> > s;//current vertex and next child
     s.push(make_pair(g.begin(source), source));
     while(!s.isEmpty())
     {

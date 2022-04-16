@@ -112,8 +112,13 @@ public:
 
     void debug()const
     {
-        for(int i = 0; i < getSize(); ++i) cout << items[i] << ", ";
-        cout << endl;
+        cout << "[";
+        for(int i = 0; i < getSize(); ++i)
+        {
+            cout << items[i];
+            if(i + 1 < getSize()) cout  << ", ";
+        }
+        cout << "]" << endl;
     }
 	void insert(int i, ITEM const& item)
 	{

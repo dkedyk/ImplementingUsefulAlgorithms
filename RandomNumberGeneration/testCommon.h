@@ -2,6 +2,7 @@
 #define IGMDK_TEST_COMMON_H
 #include "Statistics.h"
 #include "Correlation.h"
+#include "DistributionTests.h"
 #include "../ExternalMemoryAlgorithms/CSV.h"
 namespace igmdk{
 

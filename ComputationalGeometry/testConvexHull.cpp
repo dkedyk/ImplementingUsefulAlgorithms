@@ -1,5 +1,4 @@
 #include "ConvexHull.h"
-#include "BuildingArea.h"
 #include "../Utils/Debug.h"
 #include <cmath>
 using namespace igmdk;
@@ -25,8 +24,6 @@ void testConvexHull()
 
 int main()
 {
-    testBuildingArea();
-    return 0;
     testConvexHull();
 	return 0;
 }

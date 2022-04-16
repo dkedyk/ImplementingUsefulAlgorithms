@@ -199,13 +199,13 @@ void testBufferSizeDriver()
         int B = twoPower(b);
         Vector<string> row;
         DEBUG(B);
-        row.append(toString(B));
+        row.append(to_string(B));
 
         int now = clock();
         testBufferSize(B);
         double time = (clock() - now) * 1.0/CLOCKS_PER_SEC;
         DEBUG(time);
-        row.append(toString(time));
+        row.append(to_string(time));
 
         sensitivityMatrix.append(row);
 
@@ -213,25 +213,25 @@ void testBufferSizeDriver()
         testBufferSize(B, 0);
         time = (clock() - now) * 1.0/CLOCKS_PER_SEC;
         DEBUG(time);
-        row.append(toString(time));
+        row.append(to_string(time));
 
         now = clock();
         testBufferSize(B, 4096);
         time = (clock() - now) * 1.0/CLOCKS_PER_SEC;
         DEBUG(time);
-        row.append(toString(time));
+        row.append(to_string(time));
 
         now = clock();
         testBufferSize(B, twoPower(16));
         time = (clock() - now) * 1.0/CLOCKS_PER_SEC;
         DEBUG(time);
-        row.append(toString(time));
+        row.append(to_string(time));
 
         now = clock();
         testBufferSizeSlowRead(B);
         time = (clock() - now) * 1.0/CLOCKS_PER_SEC;
         DEBUG(time);
-        row.append(toString(time));
+        row.append(to_string(time));
 
         bufferMatrix.append(row);
     }
@@ -283,17 +283,17 @@ void testVectorBlockSizeDriver()
         Vector<string> row;
         int B = twoPower(b);
         DEBUG(B);
-        row.append(toString(B));
+        row.append(to_string(B));
         int now = clock();
         testBlockSizeSeq(B);
         double time = (clock() - now) * 1.0/CLOCKS_PER_SEC;
         DEBUG(time);
-        row.append(toString(time));
+        row.append(to_string(time));
         now = clock();
         testBlockSizeRand(B);
         time = (clock() - now) * 1.0/CLOCKS_PER_SEC;
         DEBUG(time);
-        row.append(toString(time));
+        row.append(to_string(time));
         matrix.append(row);
     }
     //createCSV(matrix, "VectorBChoice.csv");

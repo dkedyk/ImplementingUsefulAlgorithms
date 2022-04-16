@@ -4,7 +4,7 @@
 #include "../Utils/Debug.h"
 #include "../Utils/Vector.h"
 #include "../Heaps/Heap.h"
-#include "../Utils/GCFreelist.h"
+#include "../Utils/GCFreeList.h"
 #include "../NumericalMethods/Matrix.h"//for eLess
 #include <cmath>
 namespace igmdk{
@@ -257,8 +257,8 @@ template<typename KEY, typename VALUE,
 public:
     typedef Node NodeType;
     bool isEmpty()const{return !root;}
-    KDTree(int theD, INDEXED_COMPARATOR theC = INDEXED_COMPARATOR()): root(0),
-        c(theC), D(theD) {}
+    KDTree(int theD, INDEXED_COMPARATOR const& theC = INDEXED_COMPARATOR()):
+        root(0), c(theC), D(theD) {}
     KDTree(KDTree const& rhs): c(rhs.c){root = constructFrom(rhs.root);}
     KDTree& operator=(KDTree const& rhs){return genericAssign(*this, rhs);}
     VALUE* find(KEY const& key)const

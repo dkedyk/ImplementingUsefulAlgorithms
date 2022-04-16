@@ -127,7 +127,7 @@ public:
 		}
 	}
 	typedef Node NodeType;
-	void getSize(){return size;}
+	int getSize(){return size;}
     template<typename ACTION> void forEach(ACTION& action)
 	{
         for(int i = 0; i < capacity; ++i)

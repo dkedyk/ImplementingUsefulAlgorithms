@@ -2,7 +2,7 @@
 #include "MetaHeuristics.h"
 #include "SearchAlgorithms.h"
 #include "../Utils/Vector.h"
-#include "../MiscAlgs/Misc.h"
+#include "../MiscAlgs/LRUCache.h"
 #include "TSP.h"
 #include "Knapsack.h"
 #include "Satisfiability3.h"
@@ -659,6 +659,7 @@ template<typename PROBLEM> struct AStartTSPProblemCheap
     mutable Vector<int> stateMap;//all states ever created
     //don't know best first node for no-return case
     STATE_ID start()const{return nullState();}
+    AStartTSPProblemCheap(PROBLEM const& theProblem): problem(theProblem){}
     Vector<int> convertStatePath(Vector<STATE_ID> const& path)const
     {//skip start state as irrelevant here
         Vector<int> result;
@@ -714,7 +715,7 @@ template<typename INSTANCE> pair<Vector<int>, bool> solveTSPAStarCheap(INSTANCE
     const& instance, int maxSetSize)
 {
     typedef AStartTSPProblemCheap<INSTANCE> P;
-    P p = {instance};
+    P p(instance);
     pair<Vector<typename P::STATE_ID>, bool> result =
         AStar<P>::solve(p, maxSetSize);
     return make_pair(p.convertStatePath(result.first), result.second);

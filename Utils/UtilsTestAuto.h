@@ -56,6 +56,7 @@ void testQueueAuto()
     int n = 1000000;
     Queue<int> q;
     for(int i = 0; i < n/2; ++i) q.push(i);
+    for(int i = 0; i < n/2; ++i) assert(q[i] == i);
     for(int i = 0; i < n/2; ++i)
     {
         q.push(n/2 + i);

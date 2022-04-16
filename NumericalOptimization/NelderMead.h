@@ -34,7 +34,7 @@ template<typename FUNCTION> struct NelderMead
     }
 public:
     NelderMead(int theD, FUNCTION const& theFunction = FUNCTION()):
-        D(theD), f(theFunction), simplex(D + 1){}
+        D(theD), f(theFunction), simplex(D + 1){assert(D > 1);}
 
     P minimize(Vector<double> const& initialGuess, int maxEvals = 1000000,
         double yPrecision = highPrecEps, double step = 1)

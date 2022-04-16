@@ -1,4 +1,5 @@
 #include "MiscAlgsTestAuto.h"
+#include "KBitWordVector.h"
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -12,11 +13,23 @@ void DDDLRU()
     cout << "breakpoint" << endl;
 }
 
+void DDDNBitVector()
+{
+    KBitWordVector<4, unsigned char> Vector4BitChar8to12;
+	for(int i = 0; i < 5; i += 1)
+	{
+		Vector4BitChar8to12.append(i + 8);
+	}
+	cout << "breakpoint" << endl;
+}
+
 int main()
 {
     testAllAutoMiscAlgorithms();
 
     DDDLRU();
+
+    DDDNBitVector();
 
     Permutator perm(4);
     for(int j = 0; j < 7; ++j)

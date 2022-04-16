@@ -29,7 +29,7 @@ class IntervalGaussLobattoKronrod
         x[0] = -1; x[1] = -sqrt(2.0/3); x[2] = -1/sqrt(5); x[3] = 0;
         x[4] = -x[2]; x[5] = -x[1]; x[6] = -x[0];
     }
-    template<typename FUNCTION> initHelper(FUNCTION const& f, double fa,
+    template<typename FUNCTION> void initHelper(FUNCTION const& f, double fa,
         double fb)
     {
         assert(a < b);

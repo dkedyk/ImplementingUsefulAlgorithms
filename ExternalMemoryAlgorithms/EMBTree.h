@@ -210,6 +210,7 @@ public:
                 return leaf.records[i].value;
         }
         status = false;
+        return VALUE();
     }
     bool shouldSplit(long long node)
     {

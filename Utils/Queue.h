@@ -37,8 +37,8 @@ public:
         assert(i >= 0 && i < size);
         return items[offset(i)];
     }
-    Queue(int theSize = MIN_CAPACITY): capacity(max(int(MIN_CAPACITY),
-        theSize)), front(0), size(0), items(rawMemory<ITEM>(capacity)) {}
+    Queue(int theCapacity = MIN_CAPACITY): capacity(max(int(MIN_CAPACITY),
+        theCapacity)), front(0), size(0), items(rawMemory<ITEM>(capacity)) {}
     Queue(Queue const& rhs): capacity(max(int(MIN_CAPACITY), rhs.size)),
         size(rhs.size), front(0), items(rawMemory<ITEM>(capacity))
         {for(int i = 0; i < size; ++i) push(rhs[i]);}
@@ -62,6 +62,11 @@ public:
     {
         assert(!isEmpty());
         return items[front];
+    }
+    void debug()const
+    {
+        for(int i = 0; i < getSize(); ++i) cout << operator[](i) << ", ";
+        cout << endl;
     }
 };
 

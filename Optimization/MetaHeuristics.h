@@ -229,7 +229,7 @@ template<typename PROBLEM> typename PROBLEM::X
 }
 
 template<typename INSTANCE> Vector<int>
-    solveSymmetricPermutationSimulatedAnnealingReverse(INSTANCE const& instance,
+    solveSymmetricPermutationSimulatedAnnealingReverse(INSTANCE const&instance,
     Vector<int> const& initial, int maxMoves)
 {
     return selfTunedSimulatedAnnealing(SymmetricPermutationProblemReverseMove<

@@ -1,5 +1,5 @@
 #ifndef IGMDK_NETWORK_FLOW_TEST_AUTO_H
-#define IGMDK_NETWORK_FLOW_AUTO_H
+#define IGMDK_NETWORK_FLOW_TEST_AUTO_H
 using namespace std;
 #include "NetworkFlow.h"
 

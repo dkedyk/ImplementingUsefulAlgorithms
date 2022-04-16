@@ -21,7 +21,7 @@ template<typename ITEM> class SimpleDoublyLinkedList
     }
 public:
     SimpleDoublyLinkedList(): root(0), last(0){}
-    template<typename ARGUMENT> append(ARGUMENT const& a)
+    template<typename ARGUMENT> void append(ARGUMENT const& a)
     {//note the templated constructor
         Node* n = new Node(a);
         n->prev = last;
@@ -79,7 +79,7 @@ public:
             if(w == root) root = n;
         }
     }
-    template<typename ARGUMENT> prepend(ARGUMENT const& a)
+    template<typename ARGUMENT> void prepend(ARGUMENT const& a)
     {//append and move to front
         append(a);
         moveBefore(rBegin(), begin());

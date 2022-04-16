@@ -38,7 +38,6 @@ public:
     }
     friend BooleanMatrix operator*(BooleanMatrix const& a, bool scalar)
         {return scalar * a;}
-
     BooleanMatrix& operator+=(BooleanMatrix const& rhs)
     {//+ and - are both xor
         assert(rows == rhs.rows && columns == rhs.columns);
@@ -46,7 +45,6 @@ public:
         return *this;
     }
     BooleanMatrix& operator-=(BooleanMatrix const& rhs){return *this += rhs;}
-
     BooleanMatrix& operator*=(BooleanMatrix const& rhs)
     {//the usual row by column
         assert(columns == rhs.rows);
@@ -72,7 +70,6 @@ public:
     }//vector * matrix transposed
     friend Bitset<> operator*(Bitset<> const& v, BooleanMatrix const& m)
         {return m.transpose() * v;}
-
     static BooleanMatrix identity(int n)
     {
         BooleanMatrix result(n, n);

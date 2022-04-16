@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <algorithm>//sort
+#include <cassert>
 namespace igmdk{
 
 using namespace std;

@@ -86,7 +86,7 @@ template<typename ITEM> struct AsVectorSize1Comparator
     }
     bool operator()(ITEM const& lhs, ITEM const& rhs)const
     {
-        lhs < rhs;
+        return lhs < rhs;
     }
     int getSize(ITEM const& value)const{return 1;}
 };

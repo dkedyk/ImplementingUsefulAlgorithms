@@ -34,7 +34,7 @@ class File
     }
 public:
     static bool exists(const char* filename){return bool(ifstream(filename));}
-    static int remove(const char* filename)
+    static void remove(const char* filename)
     {
         if(exists(filename))
         {
@@ -101,7 +101,7 @@ class File
     }
 public:
     static bool exists(const char* filename){return ifstream(filename);}
-    static int remove(const char* filename)
+    static void remove(const char* filename)
     {
         if(exists(filename))
         {

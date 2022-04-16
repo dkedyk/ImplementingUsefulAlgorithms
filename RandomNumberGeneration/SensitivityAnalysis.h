@@ -1,6 +1,7 @@
 #ifndef IGMDK_SENSITIVITY_ANALYSIS_H
 #define IGMDK_SENSITIVITY_ANALYSIS_H
 #include "Statistics.h"
+#include "Bootstrap.h"
 #include "../Utils/Vector.h"
 #include <cmath>
 namespace igmdk{

@@ -5,7 +5,7 @@
 namespace igmdk{
 
 template<typename KEY, typename VALUE, typename HASHER = EHash<BUHash>,
-    typename COMPARATOR = DefaultComparator<KEY> >class ChainingHashTable
+    typename COMPARATOR = DefaultComparator<KEY> > class ChainingHashTable
 {
     int capacity, size;//capacity must be before h
     struct Node

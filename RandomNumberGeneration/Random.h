@@ -105,11 +105,12 @@ template<typename GENERATOR = QualityXorshift64> struct Random
         {return v2 * chiSquared(v1)/(v1 * chiSquared(v2));}
     double triangular01(double middle)
     {
+        assert(0 < middle && middle < 1);
         double u = uniform01();
         return sqrt(u <= middle ? middle * u : (1 - middle) * (1 - u));
     }
-    double triangular(double a, double b, double c)
-        {a + (b - a) * triangular01((c - a)/(b - a));}
+    double triangular(double a, double b, double middle)
+        {return a + (b - a) * triangular01((middle - a)/(b - a));}
     double Levy(double scale = 0.455)
     {
         double temp = normal(0, 1/sqrt(scale));

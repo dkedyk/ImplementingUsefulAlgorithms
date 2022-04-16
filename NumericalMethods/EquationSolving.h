@@ -161,8 +161,7 @@ template<> struct BroydenSecant<Vector<double> >
 template<typename FUNCTION, typename X> bool equationTryRandomStep(
     FUNCTION const& f, X& x, X& fx, double stepNorm)
 {
-    X dx = BroydenSecant<X>::generateUnitStep(x, stepNorm),
-        fNew = f(x + dx);
+    X dx = BroydenSecant<X>::generateUnitStep(x, stepNorm), fNew = f(x + dx);
     bool improved = normInf(fNew) < normInf(fx);
     if(improved)
     {

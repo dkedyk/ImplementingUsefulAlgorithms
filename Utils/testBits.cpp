@@ -50,21 +50,10 @@ void DDDBitset()
 	cout << "breakpoint" << endl;
 }
 
-void DDDNBitVector()
-{
-    KBitVector<4, unsigned char> Vector4BitChar8to12;
-	for(int i = 0; i < 5; i += 1)
-	{
-		Vector4BitChar8to12.append(i + 8);
-	}
-	cout << "breakpoint" << endl;
-}
-
 int main()
 {
     DDDBitset();
     //timePopCount();
     testBits();
-    DDDNBitVector();
 	return 0;
 }
