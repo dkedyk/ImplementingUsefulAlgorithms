@@ -23,7 +23,7 @@ string toStringDouble(double x)
 class File
 {
     fstream f;//C++ IO object
-    long long size;//cached here for efficiency
+    long long size;//cached for efficiency
     void create(const char* filename){ofstream dummy(filename, ios::trunc);}
     File(File const&);//no copying
     File& operator=(File const&);

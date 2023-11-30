@@ -320,9 +320,9 @@ void testBootstrapConfsDriver()
     matrix.append(Vector<string>());
     matrix.lastItem().append("Normal Mean");
     testBootstrapConfs<NSampler, meaner, double>(matrix);
-    DEBUG("LogNormal Mean");
+    DEBUG("Lognormal Mean");
     matrix.append(Vector<string>());
-    matrix.lastItem().append("LogNormal Mean");
+    matrix.lastItem().append("Lognormal Mean");
     testBootstrapConfs<LogNormalSampler, meaner, double>(matrix);
     DEBUG("Levy Median");
     matrix.append(Vector<string>());

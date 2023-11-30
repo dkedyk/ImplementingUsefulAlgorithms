@@ -15,7 +15,7 @@ double evaluateChiSquaredCdf(double chi, int n)
 }
 double chiSquaredP(Vector<int> const& counts,
     Vector<double> const& means, int degreesOfFreedomRemoved = 0)
-{//
+{
     double chiStat = 0;
     for(int i = 0; i < counts.getSize(); ++i)
     {//enforce 5 in each bin for good approximation
@@ -48,6 +48,7 @@ template<typename CDF> double DKWPValue(Vector<double> const& x,
     CDF const& cdf)
 {//DKW invalid for p-value < 0.5
     double delta = findMaxKDiff(x, cdf);
+    //DEBUG(delta);
     return min(0.5, 2 * exp(-2 * x.getSize() * delta * delta));
 }
 

@@ -94,7 +94,7 @@ public:
     }
     unsigned long long maxNextValue(){return m1;}
     //s1(0-2) and s2(0-2) must be respectively < m1 and m2 and not all 0
-    MRG32k3a(): s10(max(time(0) ^ PASSWORD, 1l) % m2), s11(0), s12(0),
+    MRG32k3a(): s10(max<long long>(time(0) ^ PASSWORD, 1l) % m2), s11(0), s12(0),
         s20(s10), s21(0), s22(0){}
     double uniform01(){return next()/(m1 + 1.0);}//ensures u in (0, 1)
     void jumpAhead()

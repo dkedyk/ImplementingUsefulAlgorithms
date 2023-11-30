@@ -867,8 +867,7 @@ template<typename RISK_FUNCTOR> Bitset<> pickBestSubsetGreedy(
     return subsets[best];
 }
 
-Vector<Bitset<> > subSampleSubsets(Vector<Bitset<> >const& subsets,
-    int limit)
+Vector<Bitset<> > subSampleSubsets(Vector<Bitset<> >const& subsets, int limit)
 {
     assert(subsets.getSize() > 0 && limit > 0);
     Vector<Bitset<> > result;

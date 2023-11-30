@@ -102,7 +102,7 @@ public:
 template<typename HASHER> class EHash
 {//takes special care to avoid template substitution compile errors
     HASHER h;
-    template<typename WORD> unsigned long long hash(WORD x, true_type)const
+    template<typename WORD> unsigned long long hashWord(WORD x, true_type)const
     {//integral type - hash as word if possible
         if(sizeof(WORD) <= sizeof(WORD_TYPE)) return h(x);
         return operator()(&x, 1);//word to big, will break in chunks
@@ -113,7 +113,7 @@ public:
     typedef typename HASHER::WORD_TYPE WORD_TYPE;
     unsigned long long max()const{return h.max();}
     template<typename WORD> unsigned long long operator()(WORD x)const
-        {return hash(x, is_integral<WORD>());}//integral words only
+        {return hashWord(x, is_integral<WORD>());}//integral words only
     class Builder
     {
         enum{K = sizeof(WORD_TYPE)};

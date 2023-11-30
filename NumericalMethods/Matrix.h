@@ -285,8 +285,7 @@ template<typename ITEM> struct Cholesky
     Vector<ITEM> solve(Vector<ITEM> b)const
     {
         int n = b.getSize();
-        assert(l.getRows() == n && l.getColumns() == n);
-        assert(!failed);
+        assert(l.getRows() == n && l.getColumns() == n && !failed);
         for(int i = 0; i < n; ++i)
         {
             for(int j = 0; j < i; ++j) b[i] -= b[j] * l(i, j);

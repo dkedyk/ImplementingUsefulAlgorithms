@@ -43,8 +43,7 @@ Vector<complex<double> > IFFTHelper(Vector<complex<double> > fftx)
     fftx.reverse(1, n - 1);
     return fftx * (1.0/n);
 }
-Vector<complex<double> > inverseFFTPower2(
-    Vector<complex<double> > const& x)
+Vector<complex<double> > inverseFFTPower2(Vector<complex<double> > const& x)
 {
     assert(isPowerOfTwo(x.getSize()));
     return IFFTHelper(FFTPower2(x));

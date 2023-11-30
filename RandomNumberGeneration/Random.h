@@ -360,7 +360,7 @@ struct IncrementalStatistics
 };
 
 template<typename FUNCTION> IncrementalStatistics MonteCarloSimulate(
-    FUNCTION const& f, long long nSimulations = 1000)
+    FUNCTION const& f, long long nSimulations = 10000)
 {
     IncrementalStatistics s;
     for(long long i = 0; i < nSimulations; ++i) s.addValue(f());

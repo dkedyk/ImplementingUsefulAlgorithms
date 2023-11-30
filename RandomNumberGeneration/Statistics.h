@@ -56,9 +56,8 @@ public:
         assert(ave >= 0 && ave <= 1 && confidence > 0 && confidence < 1 &&
             n > 0);
         HoefFunctor f = {ave, (1 - confidence)/2, n};
-        double e = numeric_limits<double>::epsilon();
-        double upperD = ave < 1 - e ? solveFor0(f, 0,
-            1 - ave - e).first : 0;
+        double e = numeric_limits<double>::epsilon(), upperD = ave < 1 - e ?
+            solveFor0(f, 0, 1 - ave - e).first : 0;
         f.ave = 1 - ave;
         double lowerD = ave > e ? solveFor0(f, 0,
             ave - e).first : 0;
@@ -196,7 +195,7 @@ double quantile(Vector<double> data, double q, bool isSorted = false)
 {
     assert(data.getSize() > 0);
     if(q < 0) return -numeric_limits<double>::infinity();
-    else if(q > 1) return -numeric_limits<double>::infinity();
+    else if(q > 1) return numeric_limits<double>::infinity();
     int n = data.getSize(), u = q * n, l = u - 1;
     if(u == n) u = l;//check corner cases
     else if(u == 0 || double(u) != q * n) l = u;//and border values

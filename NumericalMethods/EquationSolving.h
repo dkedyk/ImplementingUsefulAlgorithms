@@ -210,7 +210,7 @@ template<typename FUNCTION, typename X> pair<X, double> solveBroyden(
         X dx = B * -fx, oldFx = fx, oldX = x;
         double ndx = normInf(dx);
         if(!isfinite(ndx))
-        {//probably singular, either after bad update or reestimation
+        {//probably singular, after bad update or reestimation
             ++failCount;
             continue;
         }
