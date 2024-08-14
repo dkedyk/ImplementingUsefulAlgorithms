@@ -12,6 +12,7 @@ namespace igmdk{
 
 class ReturnSpecifier
 {//returns for funds of securities predicted
+//include NIIT and federal and capital gain taxes
 public:
     //all rates are percentages, not multiples
     double stockReturn, stockStd, bondReturn, bondStd, stockBondCorrelation,
@@ -43,14 +44,14 @@ public:
     double getBondStd()const{return bondStd;}
     double getStockBondCorrelation()const{return stockBondCorrelation;}
     double getInflationRate()const{return inflationRate;}
-    //defaults need updating - calculated as of late 2023
+    //defaults need constant updating - calculated as of early 2024
     ReturnSpecifier(double theTaxRateCapitalGains = 0,
         double theTaxRateFederal = 0, double theTaxRateLocal = 0,
-        double theBondTreasuryFraction = 0, double theStockReturn = 0.086,
-        double theStockStd = 0.17, double theBondReturn = 0.055,
+        double theBondTreasuryFraction = 0, double theStockReturn = 0.095,
+        double theStockStd = 0.17, double theBondReturn = 0.049,
         double theBondStd = 0.09, double theStockBondCorrelation = 0,
-        double theRiskFreeRate = 0.048, double theStockDividend = 0.02,
-        double theBondCoupon = 0.025, double theInflationRate = 0.023):
+        double theRiskFreeRate = 0.042, double theStockDividend = 0.014,
+        double theBondCoupon = 0.0323, double theInflationRate = 0.0235):
         stockReturn(theStockReturn), stockStd(theStockStd),
         bondReturn(theBondReturn), bondStd(theBondStd),
         stockBondCorrelation(theStockBondCorrelation),
@@ -129,6 +130,22 @@ public:
         q = sqrt(q * q + rhs.q * rhs.q);
         return *this;
     }
+    LognormalDistribution& operator*=(double a)
+    {//parameters are multiplicative in log
+        assert(a > 0);
+        mu *= a;
+        q *= sqrt(a);
+        return *this;
+    }
+    //normal prediction interval is mean +- 2 std, exp for lognormal median
+    //also allow to adjust by number of periods represented to get interval
+    //per period
+    pair<double, double> getMedianPredictionInterval(int nPeriods = 1) const
+    {
+        assert(nPeriods > 0);
+        return {pow(exp(mu - 2 * q), 1.0/nPeriods),
+            pow(exp(mu + 2 * q), 1.0/nPeriods)};
+    }
 };
 
 pair<double, double> estimateLogNormalParametersFromMedian(
@@ -147,11 +164,16 @@ pair<double, double> estimateLogNormalParametersFromMedian(
     double q = solveFor0(qFunctor, 0, stdev).first;
     return {mu, q};
 }
+
 double estimateArithmeticNominalStockReturn(double peRatio, double inflation,
-    double stdev)//for current PE use IShares ITOT, inflation 10 year vs TIPS
-{//assume e/p is geometric real return and lognormal returns
+    double stdev, double dpRatio = 0, double earningsGrowth = 0)
+//for current PE use IShares ITOT, inflation 10 year vs TIPS
+{//assume max(e/p, dp + eg) is geometric real return and lognormal returns
+    //dp is 12 months return (dividend yield effectively), and earnings growth
+    //is expected earnings growth, commonly estimated on 30 years of past data
     assert(peRatio > 0 && stdev > 0);
-    double geometricNominalReturn = 1 + 1/peRatio + inflation;
+    double realReturn = max(1/peRatio, dpRatio + earningsGrowth),
+        geometricNominalReturn = 1 + realReturn + inflation;
     //this is slightly more accurate than adding variance drag
     pair<double, double> muq =
         estimateLogNormalParametersFromMedian(geometricNominalReturn, stdev);
@@ -189,6 +211,11 @@ struct PercentileManager
     }
     double getTrimmedMean()const
         {return trimmedMean(values, 0.2, true);}
+    void join(PercentileManager const& other)
+    {
+        assert(values.getSize() == other.values.getSize());
+        values += other.values;
+    }
 };
 
 LognormalDistribution multigoalAdjustedLognormal(ReturnSpecifier const&
@@ -223,35 +250,8 @@ LognormalDistribution multigoalAdjustedLognormal(ReturnSpecifier const&
     current = LognormalDistribution(current.getMean()/remainingFraction,
         current.getStdev()/remainingFraction);
     //adjust for geometric for single year
-    current.setMu(current.getMu()/nYears);
-    current.setQ(current.getQ()/sqrt(nYears));
+    current *= 1.0/nYears;
     return current;
-}
-
-//Below is experimental code not presented in the book
-double estimateStockBondSalesForRebalance(ReturnSpecifier const&
-    returnSpecifier = ReturnSpecifier(), double bondFraction = 0.1,
-    int nSimulations = 1000000)
-{
-    assert(0 < bondFraction && bondFraction < 1 && nSimulations > 0);
-    LognormalDistribution stocks(1 + returnSpecifier.getStockReturn(),
-        returnSpecifier.getStockStd()), bonds(1 +
-        returnSpecifier.getBondReturn(), returnSpecifier.getBondStd());
-    IncrementalStatistics percentSales;
-    for(int i = 0; i < nSimulations; ++i)
-    {
-        double cash = (1 - bondFraction) *
-            returnSpecifier.getStockAfterTaxDividend() +
-            bondFraction * returnSpecifier.getBondAfterTaxCoupon(),
-            stockValue = (1 - bondFraction) *
-            (stocks.sample() - returnSpecifier.getStockAfterTaxDividend()),
-            bondValue = bondFraction *
-            (bonds.sample() - returnSpecifier.getBondAfterTaxCoupon()),
-            total = stockValue + bondValue,
-            saleAmount = max(0.0,fabs(bondValue - bondFraction * total) - cash);
-        percentSales.addValue(saleAmount/total);
-    }
-    return percentSales.getMean();
 }
 
 double CRRAUtility(double wealth, double a)
@@ -275,33 +275,6 @@ double expectedCRRACertaintyEquivalent(Vector<double> const& values, double a)
     for(int i = 0; i < values.getSize(); ++i)
         s.addValue(CRRAUtility(values[i], a));
     return inverseCRRAUtility(s.getMean(), a);
-}
-double trimmedCRRACertaintyEquivalent(Vector<double> const& values, double a)
-{
-    IncrementalStatistics s;
-    for(int i = 0.2 * values.getSize(); i < 0.8 * values.getSize(); ++i)
-        s.addValue(CRRAUtility(values[i], a));
-    return inverseCRRAUtility(s.getMean(), a);
-}
-
-Vector<double> getMSCIWorldReturns()
-{
-    double returns[] =
-    {
-        -2.36,4.16,22.80,16.13,-7.35,
-        12.67,34.63,-42.19,11.66,20.95,
-        10.84,15.23,33.99,-19.32,-16.21,
-        -14.21,26.44,24.43,15.76,13.48,
-        20.72,5.08,22.50,-5.23,18.28,
-        -17.02,16.61,23.29,16.16,41.89,
-        40.56,4.72,21.93,9.71,-4.79,
-        25.67,10.95,16.52,0.68,13.40,
-        -25.47,-15.24,22.48,18.36,-3.09
-    };
-    Vector<double> result;
-    for(int i = 0; i < sizeof(returns)/sizeof(returns[0]); ++i)
-        result.append(returns[i]/100.0);
-    return result;
 }
 
 }//end namespace

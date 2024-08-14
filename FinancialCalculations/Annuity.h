@@ -80,7 +80,6 @@ Vector<double> convertToSurvivalProbabilities(
     return percentSurvivedByAge;
 }
 
-
 class SurvivalEstimator
 {
     Vector<double> percentSurvivedByAge;
@@ -120,10 +119,18 @@ public:
         return 1 - totalDeathProbability;
     }
     void addPerson(SurvivalEstimator const& survivalEstimator, int ageOffset)
-    {
-        people.append({survivalEstimator, ageOffset});
-    }
+        {people.append({survivalEstimator, ageOffset});}
 };
+
+template<typename SURVIVAL_ESTIMATOR> double getFutureSurvivalProbability(
+    SURVIVAL_ESTIMATOR const& e, int yearsInFuture)
+{//assuming setup estimator with 0 starting age
+    //at future age to next year
+    //in case of joint estimator incremental probabilities
+    //are correct only from the starting age
+    return e.getSurvivalProbability(0, yearsInFuture + 1)/
+       e.getSurvivalProbability(0, yearsInFuture);
+}
 
 template<typename SURVIVAL_ESTIMATOR = SurvivalEstimator> class Annuity
 {
@@ -131,15 +138,20 @@ template<typename SURVIVAL_ESTIMATOR = SurvivalEstimator> class Annuity
     SURVIVAL_ESTIMATOR survivalEstimator;
     double stepUpR;
     int deferralYears;//assume no fraction years allowed for simplicity
+    double initialFee, annualFee;
+    int tableDelay;
 public:
     Annuity(int theAge, SURVIVAL_ESTIMATOR const& theSurvivalEstimator,
         int theNPaymentsPerAgeUnit = 12, double theStepUpR = 0,
-        int theDeferralYears = 0): age(theAge), stepUpR(theStepUpR),
-        deferralYears(theDeferralYears),
+        int theDeferralYears = 0, double theInitialFee = 0,
+        double theAnnualFee = 0, int theTableDelay = 0): age(theAge),
+        stepUpR(theStepUpR), deferralYears(theDeferralYears),
         nPaymentsPerAgeUnit(theNPaymentsPerAgeUnit),
-        survivalEstimator(theSurvivalEstimator)
+        survivalEstimator(theSurvivalEstimator), initialFee(theInitialFee),
+        annualFee(theAnnualFee), tableDelay(theTableDelay)
     {assert(theAge >= 0 && theNPaymentsPerAgeUnit > 0 && theDeferralYears >= 0
-        && 0 <= theStepUpR);}
+        && 0 <= theStepUpR && 0 <= initialFee && initialFee < 1 &&
+        0 <= annualFee && annualFee < 1 && 0 <= tableDelay && tableDelay < 10);}
     Vector<double> calculateEstimatedCashFlow(double payment) const
     {
         assert(payment > 0 && isfinite(payment));
@@ -147,7 +159,8 @@ public:
         for(int ageNext = age;; ++ageNext)
         {
             double survivalProbability =
-                survivalEstimator.getSurvivalProbability(age, ageNext);
+                survivalEstimator.getSurvivalProbability(age - tableDelay,
+                ageNext - tableDelay);
             if(!isELess(0, survivalProbability)) break;
             double expectedPayment = payment * survivalProbability;
             if(ageNext < age + deferralYears) expectedPayment = 0;
@@ -162,21 +175,24 @@ public:
     double calculatePrice(double payment, double r) const
     {
         assert(payment > 0 && isfinite(payment) && isfinite(r));
+        r -= annualFee;//implicit r lower for the fee
         Vector<double> cashFlow = calculateEstimatedCashFlow(payment);
-        return igmdk::calculatePriceGeneral(cashFlow,
+        //price higher for the fee
+        return (1 + initialFee) * igmdk::calculatePriceGeneral(cashFlow,
             getDatesFrom0(cashFlow.getSize(), 1.0/nPaymentsPerAgeUnit), r);
     }
     double calculatePayment(double price, double r) const
     {
         assert(price > 0 && isfinite(r));
+        price /= 1 + initialFee;//implicit price lower for the fee
+        r -= annualFee;//implicit r lower for the fee
         //solve for r such that price equals to calculated price
         auto priceFunctor = [price, r, this](double payment)
             {return calculatePrice(payment, r) - price;};
-        pair<double, double> result = exponentialSearch1Sided(priceFunctor, 0);
-        return result.first;
+        return exponentialSearch1Sided(priceFunctor, 0).first;
     }
     double calculateYield(double price, double payment) const
-    {
+    {//no price and r adjustments for yield calculation
         Vector<double> cashFlow = calculateEstimatedCashFlow(payment);
         return igmdk::calculateYieldGeneral(cashFlow,
             getDatesFrom0(cashFlow.getSize(), 1.0/nPaymentsPerAgeUnit), price);

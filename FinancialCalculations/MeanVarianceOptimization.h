@@ -137,58 +137,5 @@ MeanVariancePortfolio makeStockBondMVP(ReturnSpecifier const& returnSpecifier)
     return MeanVariancePortfolio(means, covariances);
 }
 
-class MultiAccountReturns
-{
-    struct AccountData
-    {
-        LognormalDistribution annualReturns;
-        double weight, stockProportion;
-        AccountData(pair<double, double> const& meanstd, double theWeight,
-            double theStockProportion): stockProportion(theStockProportion),
-            annualReturns(1 + meanstd.first, meanstd.second), weight(theWeight)
-        {}
-    };
-    Vector<AccountData> accounts;
-public:
-    void addAccount(double weight, double bondFraction, double riskFreeFraction,
-        ReturnSpecifier const& returnSpecifier)
-    {
-        assert(weight > 0 && bondFraction >= 0 && bondFraction <= 1 &&
-            riskFreeFraction >= 0 && riskFreeFraction <= 1);
-        MeanVariancePortfolio stockBondMVP = makeStockBondMVP(returnSpecifier);
-        Vector<double> weights;
-        weights.append(1 - bondFraction);
-        weights.append(bondFraction);
-        pair<double, double> meanstd = stockBondMVP.evaluate(weights);
-        meanstd.first = (1 - riskFreeFraction) * meanstd.first +
-            riskFreeFraction * returnSpecifier.getRiskFreeRate();
-        meanstd.second *= 1 - riskFreeFraction;
-        accounts.append(AccountData(meanstd, weight,
-            (1 - bondFraction) * (1 - riskFreeFraction)));
-    }
-    double getTotalGeometricReturnRate()const
-    {
-        double totalWeight = 0, totalGeometricRate = 0;
-        for(int i = 0; i < accounts.getSize(); ++i)
-        {
-            totalWeight += accounts[i].weight;
-            totalGeometricRate += accounts[i].weight *
-                accounts[i].annualReturns.getMedian();
-        }
-        return (totalGeometricRate)/totalWeight - 1;
-    }
-    double getTotalStockProportion()const
-    {
-        double totalWeight = 0, totalStockProportion = 0;
-        for(int i = 0; i < accounts.getSize(); ++i)
-        {
-            totalWeight += accounts[i].weight;
-            totalStockProportion += accounts[i].weight *
-                accounts[i].stockProportion;
-        }
-        return totalStockProportion/totalWeight;
-    }
-};
-
 }//end namespace
 #endif

@@ -1,3 +1,4 @@
+import math
 class Point:
     def __init__(self, x, y):
         self.x = x
@@ -6,7 +7,6 @@ class Circle:
     def __init__(self, p, r):
         self.p = p
         self.r = r
-import math
 def distance(p1, p2):
     return math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
 def isInCircle(p, circles):
@@ -15,7 +15,7 @@ def isInCircle(p, circles):
             return True
     return False
 def findBoundingBox(circles):
-    inf = float("inf")#no math.inf in my python
+    inf = math.inf
     left = inf
     right = -inf
     down = inf
@@ -38,9 +38,9 @@ def findCoveredArea(circles, nSimulations):
     down = box[1].y
     up = box[0].y
     inCount = 0
-    for i in range(0, nSimulations):
+    for _ in range(0, nSimulations):
         if isInCircle(Point(random.uniform(left, right),
             random.uniform(down, up)), circles):
             inCount += 1
     return float(inCount)/nSimulations * (up - down) * (right - left)
-print findCoveredArea([Circle(Point(0, 0), 1)], 1000000)#expect Pi
+print(findCoveredArea([Circle(Point(0, 0), 1)], 1000000))#expect Pi

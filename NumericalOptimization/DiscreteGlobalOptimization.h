@@ -1,5 +1,5 @@
-#ifndef IGMDK_GLOBAL_NUMERICAL_OPTIMIZATION_H
-#define IGMDK_GLOBAL_NUMERICAL_OPTIMIZATION_H
+#ifndef IGMDK_DISCRETE_NUMERICAL_OPTIMIZATION_H
+#define IGMDK_DISCRETE_NUMERICAL_OPTIMIZATION_H
 #include <cmath>
 #include "../Utils/Vector.h"
 #include "../RandomNumberGeneration/Random.h"

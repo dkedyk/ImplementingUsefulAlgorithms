@@ -14,6 +14,7 @@
 #include "../ErrorCorrectingCodes/ErrorCorrectingCodesTestAuto.h"
 #include "../Cryptography/CryptographyTestAuto.h"
 #include "../NumericalMethods/NumericalMethodsTestAuto.h"
+#include "../FinancialCalculations/FinancialCalculationsTestAuto.h"
 
 using namespace igmdk;
 
@@ -35,6 +36,7 @@ int main()
     testAllAutoErrorCorrectingCodes();
     testAllAutoCryptography();
     testAllAutoNumericalMethods();
+    testAllAutoFinancialCalculations();
     DEBUG("All Tests Auto passed");
 
 	return 0;

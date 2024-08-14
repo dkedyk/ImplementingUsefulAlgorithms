@@ -139,39 +139,5 @@ struct Mortgage
     }
 };
 
-
-//Below is experimental code not presented in the book
-double calculatePV(double futureAmount, double term, double rate)
-{
-    assert(futureAmount > 0 && term > 0 && abs(rate) > 0);
-    return futureAmount/pow(1 + rate, term);
-}
-double calculateGoalMonthlySavings(double futureAmount, int term,
-    double rate)
-{//first calculate PV
-    assert(futureAmount > 0 && term > 0 && abs(rate) > 0);
-    double pv = calculatePV(futureAmount, term, rate);
-    //then assume take out mortgate on PV, and find its monthly payment
-    Mortgage mortgage(rate, pv, term);
-    return mortgage.getMonthlyPayment();
-}
-
-//Given liabilities presented by amount and years to payment, calculate
-//the total present value and the pv-weighted duration
-pair<double, double> calculatePVAndDuration(
-    Vector<pair<double, double>> const& liabilities, double discountRate)
-{//each liability assumed to be 0-coupon bond
-    double pv = 0, totalAmountDuration = 0;
-    for(int i = 0; i < liabilities.getSize(); ++i)
-    {
-        double pvi = liabilities[i].second > 0 ? calculatePV(
-            liabilities[i].first, liabilities[i].second, discountRate) :
-            liabilities[i].first;
-        pv += pvi;
-        totalAmountDuration += pvi * liabilities[i].second;
-    }
-    return {pv, totalAmountDuration/pv};
-}
-
 }//end namespace
 #endif
