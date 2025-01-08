@@ -118,15 +118,14 @@ void testMakeReturnFile()
     for(int i = 0; i < frontier.getSize(); ++i)
     {
         int frontierIndex = frontier.getSize() - 1 - i;
-        pair<double, double> mq = mvp.evaluate(frontier[frontierIndex].second);
+        pair<double, double> mq;
         if(tangency.second[0] > frontier[frontierIndex].second[0])
-        {//stock below tangency, will mix with risk-free
-            mq = mqTangency;
-            double tangencyFraction =
-                frontier[frontierIndex].second[0]/tangency.second[0];
-            mq.first = mq.first * tangencyFraction +
+        {//stock below tangency, will mix with risk-free to get target stock
+            double tangencyFraction = max(frontier[frontierIndex].second[0]/tangency.second[0],
+                numeric_limits<double>::epsilon());//to avoid numerical issues
+            mq.first = mqTangency.first * tangencyFraction +
                 returnSpecifier.getRiskFreeRate() * (1 - tangencyFraction);
-            mq.second *= tangencyFraction;
+            mq.second = mqTangency.second * tangencyFraction;
         }
         else
         {//stocks at or above tangency
@@ -208,12 +207,19 @@ void testAnnuityAutoSingleFemaleSpending()
     }
 }
 
+
+/* From early 2024:
+    double pe = 25.07, bondYield = 0.0485, inflation = 0.0235, stdevStock = 0.17, stdevBond = 0.09, riskFreeRate = 0.042, dp = 0.014, earningsGrowth = 0.04;
+    double internationalPE = 15.38, usFraction = 0.6;
+*/
+
 void testReturnEstimator()
 {
     DEBUG("Return Estimator");
-    double pe = 25.07, bondYield = 0.0485, inflation = 0.0235, stdevStock = 0.17, stdevBond = 0.09, riskFreeRate = 0.042, dp = 0.014, earningsGrowth = 0.04;
+    //From early 2025:
+    double pe = 28.2, bondYield = 0.05, inflation = 0.024, stdevStock = 0.17, stdevBond = stdevStock/2, riskFreeRate = 0.046, dp = 0.012, earningsGrowth = 0.04;
+    double internationalPE = 15.78, usFraction = 0.66;
     double stockReturnUS = estimateArithmeticNominalStockReturn(pe, inflation, stdevStock, dp, earningsGrowth);
-    double internationalPE = 15.38, usFraction = 0.6;
     double stockReturnEXUS = estimateArithmeticNominalStockReturn(internationalPE, inflation, stdevStock);
     double totalStockReturn = stockReturnUS * usFraction + stockReturnEXUS * (1 - usFraction);
     DEBUG(totalStockReturn - 1);
@@ -299,7 +305,7 @@ void testPortfolioSimulationRetirementTaxable5()
         row.append(to_string(taxAdjustedFraction));
         matrix.append(row);
     }
-    createCSV(matrix, "early_retirement_amounts.csv");
+    //createCSV(matrix, "early_retirement_amounts.csv");
 
 }
 
@@ -412,7 +418,7 @@ void testPortfolioSimulationNoCashFlow()
         double riskFreeReturn = 0;
         Vector<double> noSavings(term, 0);
         {
-            PortfolioSimulationResult safe = performSimulation(RiskFreeAsset(returnSpecifier, 100), noSavings);
+            PortfolioSimulationResult safe = performSimulation(RiskFreeAsset(returnSpecifier, 100), noSavings, 1000000);
             riskFreeReturn = safe.getMedian();
             DEBUG("risk-free");
             safe.debug(inflationFactor);
@@ -421,14 +427,108 @@ void testPortfolioSimulationNoCashFlow()
         {
             DEBUG(percentStock);
             {
-                PortfolioSimulationResult result = performSimulation(StockBondAsset(returnSpecifier, 100, 1 - percentStock/100.0), noSavings);
+                PortfolioSimulationResult result = performSimulation(StockBondAsset(returnSpecifier, 100, 1 - percentStock/100.0), noSavings, 1000000);
                 result.debug(inflationFactor);
-                //DEBUG(result.sharpeRatio(riskFreeReturn));
                 double riskFreeRank = result.riskFreeRank(riskFreeReturn);
                 DEBUG(riskFreeRank);
             }
         }
 
+}
+
+void testPortfolioSimulationNoCashFlowUpRebalanced()
+{
+    DEBUG("testPortfolioSimulationNoCashFlowUpRebalanced");
+    Vector<Vector<string> > matrix;
+    Vector<string> constants;
+    constants.append("Stock Fraction");
+    for(int i = 0; i < 3; ++i)
+    {
+        constants.append("Median");
+        constants.append("0.1th %");
+        constants.append("5th %");
+        constants.append("95th %");
+        constants.append("CRRA(3)");
+        constants.append("CRRA(6)");
+        constants.append("Risk-free Rank");
+        constants.append("MaxDrawdown 5%");
+        constants.append("MaxDrawdown 50%");
+        constants.append("MaxDrawdown 95%");
+    }
+    constants.append("Put cost");
+    matrix.append(constants);
+
+
+    ReturnSpecifier returnSpecifier;//no tax
+        int term = 30;
+        DEBUG(term);
+        double inflationFactor = pow(1 + returnSpecifier.getInflationRate(), term);
+        double riskFreeReturn = 0;
+        Vector<double> noSavings(term, 0);
+        {
+            PortfolioSimulationResult safe = performSimulation(RiskFreeAsset(returnSpecifier, 100), noSavings, 10000000);
+            riskFreeReturn = safe.getMedian();
+            DEBUG("risk-free");
+            safe.debug(inflationFactor);
+        }
+
+        //calculate tangency
+        MeanVariancePortfolio mvp(makeStockBondMVP(returnSpecifier));
+        pair<double, Vector<double> > tangency = mvp.findOptimalSharpeWeights(returnSpecifier.getRiskFreeRate());
+        pair<double, double> mqTangency = mvp.evaluate(tangency.second);
+        double tangencyStockFraction = tangency.second[0];
+
+
+        for(int percentStock = 5; percentStock <= 100; percentStock += 5)
+        {
+            double stockFraction = percentStock/100.0;
+            DEBUG(percentStock);
+            Vector<PortfolioSimulationResult> results;
+            {//optimal
+                double bondFraction = 1 - stockFraction, riskFreeFraction = 0;
+                if(stockFraction < tangencyStockFraction)
+                {
+                    bondFraction = 1 - tangencyStockFraction;
+                    riskFreeFraction = 1 - stockFraction/tangencyStockFraction;
+                }
+                PortfolioSimulationResult result = performSimulation(makeGeneralAsset(100, 1 - stockFraction, 0, 0, returnSpecifier), noSavings, 10000000);
+                results.append(result);
+            }
+            {//risk-free rebalanced
+                PortfolioSimulationResult result = performSimulation(makeGeneralAsset(100, 0, 1 - stockFraction, 0, returnSpecifier), noSavings, 10000000);
+                results.append(result);
+            }
+            {//risk-free up-rebalanced
+                PortfolioSimulationResult result = performSimulation(makeGeneralAsset(100, 0, 0, 1 - stockFraction, returnSpecifier), noSavings, 10000000);
+                results.append(result);
+            }
+
+            double price = 100, strikePrice = 100 - percentStock, strikeTime = 1;
+            double putPrice = numeric_limits<double>::quiet_NaN();
+            if(stockFraction < 1) putPrice = priceEuropeanPut(price, returnSpecifier.getRiskFreeRate(), returnSpecifier.getStockReturn(), returnSpecifier.getStockStd(), strikePrice, strikeTime);
+
+            Vector<string> row;
+            row.append(to_string(stockFraction));
+            for(int i = 0; i < 3; ++i)
+            {
+                PortfolioSimulationResult result = results[i];
+                double riskFreeRank = result.riskFreeRank(riskFreeReturn);
+                row.append(to_string(result.getMedian()/inflationFactor));
+                row.append(to_string(result.percentiles.getPercentile(0.001)/inflationFactor));
+                row.append(to_string(result.percentiles.getPercentile(0.05)/inflationFactor));
+                row.append(to_string(result.percentiles.getPercentile(0.95)/inflationFactor));
+                row.append(to_string(expectedCRRACertaintyEquivalent(result.percentiles.values, 3)/inflationFactor));
+                row.append(to_string(expectedCRRACertaintyEquivalent(result.percentiles.values, 6)/inflationFactor));
+                row.append(to_string(riskFreeRank));
+                row.append(to_string(result.maxDrawdownPercentiles.getPercentile(0.05)));
+                row.append(to_string(result.maxDrawdownPercentiles.getPercentile(0.5)));
+                row.append(to_string(result.maxDrawdownPercentiles.getPercentile(0.95)));
+            }
+            row.append(to_string(putPrice/100));
+            matrix.append(row);
+
+        }
+    //createCSV(matrix, "protection_losses.csv");
 }
 
 void testPortfolioSimulationDCA()
@@ -557,7 +657,7 @@ PortfolioSimulationResult performActuarialARVASimulation(FINANCIAL_ASSET const&
             financialAsset.simulateStep(-spending);
         }
     }
-    return PortfolioSimulationResult(values, Vector<double>());
+    return PortfolioSimulationResult(values, Vector<double>(), Vector(1, 0.0));
 }
 
 void testARVARetirement()
@@ -617,12 +717,12 @@ void testMinVarCalculationTotal(ReturnSpecifier returnSpecifier =
         frontier[i].second.debug();
         pair<double, double> mq;
         if(tangency.second[0] > frontier[i].second[0])
-        {//stock below tangency, will mix with risk-free
-            mq = mqTangency;
-            double tangencyFraction = frontier[i].second[0]/tangency.second[0];
-            mq.first = mq.first * tangencyFraction +
+        {//stock below tangency, will mix with risk-free to get target stock
+            double tangencyFraction = max(frontier[i].second[0]/tangency.second[0],
+                numeric_limits<double>::epsilon());//to avoid numerical issues
+            mq.first = mqTangency.first * tangencyFraction +
                 returnSpecifier.getRiskFreeRate() * (1 - tangencyFraction);
-            mq.second *= tangencyFraction;
+            mq.second = mqTangency.second * tangencyFraction;
         }
         else
         {//stocks at or above tangency
@@ -630,6 +730,7 @@ void testMinVarCalculationTotal(ReturnSpecifier returnSpecifier =
         }
         DEBUG(mq.first);
         DEBUG(mq.second);
+        DEBUG(mq.second/mqTangency.second);
         DEBUG(mq.first - 2 * mq.second);
         DEBUG(mq.first + 2 * mq.second);
 
@@ -648,10 +749,20 @@ void testMinVarCalculationTotal(ReturnSpecifier returnSpecifier =
         DEBUG((mq.first - returnSpecifier.getRiskFreeRate())/mq.second);
     }
 }
+void testMinVarCalculationCurrentAverageReturns()
+{
+    DEBUG("testMinVarCalculationCurrentHistoricalStockReturns");
+    //set stock return to 6% real, adjust to nominal arithmetic
+    ReturnSpecifier returnSpecifier;
+    returnSpecifier.stockReturn = 0.06 + returnSpecifier.getInflationRate() +
+        returnSpecifier.getStockStd() * returnSpecifier.getStockStd()/2;
+    testMinVarCalculationTotal(returnSpecifier, false);
+}
 void testMinVarCalculationCurrent()
 {
-    DEBUG("testMinVarCalculationCurrentTaxes");
-    testMinVarCalculationTotal(false);
+    DEBUG("testMinVarCalculationCurrent");
+    ReturnSpecifier returnSpecifier;
+    testMinVarCalculationTotal(returnSpecifier, false);
 }
 
 void testMinVarCalculationCurrentTaxes()
@@ -659,72 +770,6 @@ void testMinVarCalculationCurrentTaxes()
     DEBUG("testMinVarCalculationCurrentTaxes");
     ReturnSpecifier returnSpecifier(0.15, 0.20, 0.00);
     testMinVarCalculationTotal(returnSpecifier, false, 0.99);
-}
-
-class IndependentMultiAccountReturns
-{
-    struct AccountData
-    {
-        LognormalDistribution annualReturns;
-        double weight, stockProportion;
-        AccountData(pair<double, double> const& meanstd, double theWeight,
-            double theStockProportion): stockProportion(theStockProportion),
-            annualReturns(1 + meanstd.first, meanstd.second), weight(theWeight)
-        {}
-    };
-    Vector<AccountData> accounts;
-public:
-    void addAccount(double weight, double bondFraction, double riskFreeFraction,
-        ReturnSpecifier const& returnSpecifier)
-    {
-        assert(weight > 0 && bondFraction >= 0 && bondFraction <= 1 &&
-            riskFreeFraction >= 0 && riskFreeFraction <= 1);
-        MeanVariancePortfolio stockBondMVP = makeStockBondMVP(returnSpecifier);
-        Vector<double> weights;
-        weights.append(1 - bondFraction);
-        weights.append(bondFraction);
-        pair<double, double> meanstd = stockBondMVP.evaluate(weights);
-        meanstd.first = (1 - riskFreeFraction) * meanstd.first +
-            riskFreeFraction * returnSpecifier.getRiskFreeRate();
-        meanstd.second *= 1 - riskFreeFraction;
-        accounts.append(AccountData(meanstd, weight,
-            (1 - bondFraction) * (1 - riskFreeFraction)));
-    }
-    double getTotalGeometricReturnRate()const
-    {
-        double totalWeight = 0, totalGeometricRate = 0;
-        for(int i = 0; i < accounts.getSize(); ++i)
-        {
-            totalWeight += accounts[i].weight;
-            totalGeometricRate += accounts[i].weight *
-                accounts[i].annualReturns.getMedian();
-        }
-        return (totalGeometricRate)/totalWeight - 1;
-    }
-    double getTotalStockProportion()const
-    {
-        double totalWeight = 0, totalStockProportion = 0;
-        for(int i = 0; i < accounts.getSize(); ++i)
-        {
-            totalWeight += accounts[i].weight;
-            totalStockProportion += accounts[i].weight *
-                accounts[i].stockProportion;
-        }
-        return totalStockProportion/totalWeight;
-    }
-};
-
-void testMultiAccountReturnsImbalance()
-{
-    DEBUG("25-75 vs 50-50");
-    ReturnSpecifier taxEfficient;
-    IndependentMultiAccountReturns mar;
-    mar.addAccount(1, 0.75, 0, taxEfficient);
-    mar.addAccount(1, 0.25, 0, taxEfficient);
-    DEBUG(mar.getTotalGeometricReturnRate());
-    IndependentMultiAccountReturns optimal;
-    optimal.addAccount(1, 0.5, 0, taxEfficient);
-    DEBUG(optimal.getTotalGeometricReturnRate());
 }
 
 pair<double, double> estimateRealReturnRate(double taxEfficientStock, double taxEfficientBond,
@@ -761,10 +806,6 @@ void testMultiAccountReturns()
     ReturnSpecifier taxable(0.15, 0.2, 0), taxEfficient;
     double totalTaxable = 500, totalTaxEfficient = 500, totalEF = 200, bondFraction = 0.2;
     DEBUG(estimateRealReturnRate((totalTaxEfficient - totalEF) * (1 - bondFraction), (totalTaxEfficient - totalEF) * bondFraction, totalEF, taxable, taxEfficient, totalTaxable, 0).first);
-    IndependentMultiAccountReturns marI;
-    marI.addAccount(totalTaxEfficient, bondFraction, totalEF/totalTaxEfficient, taxEfficient);
-    marI.addAccount(totalTaxable, 0, 0, taxable);
-    DEBUG(marI.getTotalGeometricReturnRate() - taxEfficient.getInflationRate());
 }
 
 void testEstimateStockBondRebalance()
@@ -777,6 +818,298 @@ void testEstimateStockBondRebalance()
     DEBUG(stockBondPercents);
 }
 
+double evaluateLognormalCDF(double relativeReturnTarget, double mean,
+    double stdev, int nPeriods)
+{// mean is 1-based
+    assert(relativeReturnTarget > 0 && mean > 0 && stdev > 0 && nPeriods > 0);
+    LognormalDistribution ld(mean, stdev);
+    ld *= nPeriods;
+    //DEBUG(log(relativeReturnTarget));
+    //DEBUG(ld.getMu());
+    //DEBUG(ld.getQ());
+    double z = (log(relativeReturnTarget) - ld.getMu())/ld.getQ();
+    //DEBUG(z);
+    return approxNormalCDF(z);
+}
+
+pair<double, Vector<double> > stockOfMaxHitChance(double relativeReturnTarget,
+    MeanVariancePortfolio const& mvp, int nPeriods)
+{
+    auto functor = [relativeReturnTarget, nPeriods](double mean, double stdev)
+    {//min value best functor
+        return -(1 - evaluateLognormalCDF(relativeReturnTarget, 1 + mean, stdev,
+            nPeriods));
+    };
+    return mvp.findOptimalFrontierPoint(functor);
+}
+
+void testGoalSeek()
+{
+    DEBUG("testGoalSeek");
+    //with 100% stocks
+    DEBUG(1 - evaluateLognormalCDF(1.04, 1.08, 0.17, 1));//chance to at least outperform t-bill in 1 year
+    DEBUG(1 - evaluateLognormalCDF(1.5, 1.08, 0.17, 5));//chance to at least 50% in 5
+    DEBUG(1 - evaluateLognormalCDF(10, 1.08, 0.17, 30));//chance to at least 10x wealth in 30
+    DEBUG(1 - evaluateLognormalCDF(1, 1.08, 0.17, 10));//chance to at least gain nothing in 10
+    DEBUG(1 - evaluateLognormalCDF(pow(1.04, 10), 1.08, 0.17, 10));//chance to at least outperform t-bill in 10 years
+    DEBUG(1 - evaluateLognormalCDF(pow(1.04, 30), 1.08, 0.17, 30));//chance to at least outperform t-bill in 30 years
+    DEBUG(evaluateLognormalCDF(0.8, 1.08, 0.17, 1));//chance to lose at least 20% in 1 year
+    DEBUG(1 - evaluateLognormalCDF(1.2, 1.08, 0.17, 1));//chance to gain at least 20% in 1 year
+    DEBUG(evaluateLognormalCDF(0.8, 1.08, 0.17, 5));//chance to lose at least 20% in 5 years
+    DEBUG(evaluateLognormalCDF(1, 1.08, 0.17, 1));//chance to lose in 1 year
+    DEBUG(evaluateLognormalCDF(1, 1.08, 0.17, 5));//chance to lose in 5 years
+    DEBUG(evaluateLognormalCDF(0.5, 1.08, 0.17, 1));//chance to lose at least 50% in 1 year
+    DEBUG(evaluateLognormalCDF(0.5, 1.08, 0.17, 5));//chance to lose at least 50% in 5 years
+    //with 60% stocks
+    DEBUG(1 - evaluateLognormalCDF(1.04, 1.06, 0.11, 1));//chance to at least outperform t-bill in 1 year
+    DEBUG(1 - evaluateLognormalCDF(10, 1.06, 0.11, 30));//chance to at least 10x wealth in 30
+    DEBUG(1 - evaluateLognormalCDF(1, 1.06, 0.11, 10));//chance to at least gain nothing in 10
+    DEBUG(1 - evaluateLognormalCDF(pow(1.04, 10), 1.06, 0.11, 10));//chance to at least outperform t-bill in 10 years
+    DEBUG(1 - evaluateLognormalCDF(pow(1.04, 30), 1.06, 0.11, 30));//chance to at least outperform t-bill in 30 years
+    //max chance to double in 20 years
+    MeanVariancePortfolio mvp = makeStockBondMVP(ReturnSpecifier());
+    pair<double, Vector<double> > result = stockOfMaxHitChance(2, mvp, 20);
+    DEBUG(result.first);
+    result.second.debug();
+}
+
+void testGoalSeekTargetDatePath()
+{
+    DEBUG("testGoalSeekTargetDatePath");
+    ReturnSpecifier returnSpecifier;
+
+    Vector<Vector<string> > matrix;
+    int n = 7;
+    Vector<string> constants(n, "");
+    constants[0] = "Multiple";
+    constants[1] = "Years";
+    constants[2] = "20/80";
+    constants[3] = "40/60";
+    constants[4] = "60/40";
+    constants[5] = "80/20";
+    constants[6] = "100/0";
+    matrix.append(constants);
+
+    MeanVariancePortfolio mvp(makeStockBondMVP(returnSpecifier));
+    pair<double, Vector<double> > tangency = mvp.findOptimalSharpeWeights(returnSpecifier.getRiskFreeRate());
+    pair<double, double> mqTangency = mvp.evaluate(tangency.second);
+
+    Vector<pair<double, Vector<double> > > frontier =
+        mvp.findOptimalPortfolioWeightsRange(6);
+    for(double multiple = 0.5; multiple < 8.1; multiple *= 2)
+    {
+        for(int nYears = 1; nYears <= 30; nYears += 5)
+        {
+            Vector<string> row;
+            row.append(to_string(multiple));
+            row.append(to_string(nYears));
+            double target = pow(1 + returnSpecifier.getRiskFreeRate(), nYears);
+            for(int i = 1; i < frontier.getSize(); ++i)
+            {
+                pair<double, double> mq;
+                if(tangency.second[0] > frontier[i].second[0])
+                {//stock below tangency, will mix with risk-free to get target stock
+                    double tangencyFraction = max(frontier[i].second[0]/tangency.second[0],
+                        numeric_limits<double>::epsilon());//to avoid numerical issues
+                    mq.first = mqTangency.first * tangencyFraction +
+                        returnSpecifier.getRiskFreeRate() * (1 - tangencyFraction);
+                    mq.second = mqTangency.second * tangencyFraction;
+                }
+                else
+                {//stocks at or above tangency
+                    mq = mvp.evaluate(frontier[i].second);
+                }
+                double successProbability = 1 - evaluateLognormalCDF(target * multiple, 1 + mq.first, mq.second, nYears);//chance to at least outperform t-bill multiple
+                row.append(to_string(successProbability));
+
+            }
+            matrix.append(row);
+            if(nYears == 1) nYears = 0;
+        }
+    }
+    //createCSV(matrix, "target_fund_success_probs.csv");
+}
+
+void testTotalBondEffect()
+{
+    DEBUG("testTotalBondEffect");
+    ReturnSpecifier returnSpecifier;
+    MeanVariancePortfolio mvp(makeStockBondMVP(returnSpecifier));
+
+
+    pair<double, Vector<double> > tangency = mvp.findOptimalSharpeWeights(returnSpecifier.getRiskFreeRate());
+    pair<double, double> mqTangency = mvp.evaluate(tangency.second);
+
+    Vector<pair<double, Vector<double> > > frontier =
+        mvp.findOptimalPortfolioWeightsRange(21);
+
+    Vector<Vector<string> > matrix;
+    int n = 7;
+    Vector<string> constants(n, "");
+    constants[0] = "Stock Fraction";
+    constants[1] = "Geometric Return Optimal";
+    constants[2] = "Std Optimal Mix";
+    constants[3] = "Geometric Return Stock-Bond";
+    constants[4] = "Std Stock-Bond";
+    constants[5] = "Geometric Return Stock-Risk-free";
+    constants[6] = "Std Stock-Bond";
+    matrix.append(constants);
+
+
+    for(int i = 0; i < frontier.getSize(); ++i)
+    {
+        pair<double, double> mq;
+        double stockFraction = frontier[i].second[0];
+        if(tangency.second[0] > stockFraction)
+        {//stock below tangency, will mix with risk-free to get target stock
+            double tangencyFraction = max(stockFraction/tangency.second[0],
+                numeric_limits<double>::epsilon());//to avoid numerical issues
+            mq.first = mqTangency.first * tangencyFraction +
+                returnSpecifier.getRiskFreeRate() * (1 - tangencyFraction);
+            mq.second = mqTangency.second * tangencyFraction;
+        }
+        else
+        {//stocks at or above tangency
+            mq = mvp.evaluate(frontier[i].second);
+        }
+        LognormalDistribution lognormal(1 + mq.first, mq.second);
+
+        Vector<string> row;
+        row.append(to_string(stockFraction));
+        //optimal
+        row.append(to_string(lognormal.getMedian() - 1));
+        row.append(to_string(mq.second));
+        //stock-bond
+        mq = mvp.evaluate(frontier[i].second);
+        lognormal = LognormalDistribution(1 + mq.first, mq.second);
+        row.append(to_string(lognormal.getMedian() - 1));
+        row.append(to_string(mq.second));
+        //stock-risk-free
+        mq.first = returnSpecifier.getStockReturn() * stockFraction +
+                returnSpecifier.getRiskFreeRate() * (1 - stockFraction);
+        mq.second = returnSpecifier.getStockStd() * stockFraction;
+        lognormal = LognormalDistribution(1 + mq.first, mq.second);
+        row.append(to_string(lognormal.getMedian() - 1));
+        row.append(to_string(mq.second));
+        matrix.append(row);
+    }
+    createCSV(matrix, "mean_var_total_bond_effect.csv");
+}
+
+void testPickedPortfolios()
+{
+    DEBUG("testPickedPortfolios");
+
+    Vector<Vector<string> > matrix;
+    Vector<string> constants;
+    constants.append("Risk Group");
+    constants.append("Stocks/Bonds/Risk-free");
+    constants.append("Median");
+    constants.append("5th %");
+    constants.append("95th %");
+    constants.append("CRRA(3)");
+    constants.append("CRRA(6)");
+    constants.append("Risk-free Rank");
+    constants.append("95th % Max Drawdown");
+    matrix.append(constants);
+
+    ReturnSpecifier returnSpecifier;//no tax
+    for(int term = 5; term <= 20; term *= 2)
+    {
+        DEBUG(term);
+        Vector<string> termRow(constants.getSize(), "");
+        termRow[0] = "Years";
+        termRow[1] = to_string(term);
+        matrix.append(termRow);
+
+        double inflationFactor = pow(1 + returnSpecifier.getInflationRate(), term);
+        double riskFreeReturn = 0;
+        Vector<double> noSavings(term, 0);
+        {
+            DEBUG("risk-free");
+            PortfolioSimulationResult safe = performSimulation(RiskFreeAsset(returnSpecifier, 100), noSavings, 10000000);
+            riskFreeReturn = safe.getMedian();
+        }
+        for(int i = 0; i < 5; ++i)
+        {
+            string name = "", allocation = "";
+            double bondFraction = 0, riskFreeFractionUpRebalanced = 0;
+            if(i == 0)
+            {
+                name = "High";
+                allocation = "100/0/0";
+            }
+            else if(i == 1)
+            {
+                name = "Medium-high";
+                allocation = "75/25/0";
+                bondFraction = 0.25;
+            }
+            else if(i == 2)
+            {
+                name = "Medium";
+                allocation = "60/15/25";
+                riskFreeFractionUpRebalanced = 0.25;
+                bondFraction = 0.15;
+            }
+            else if(i == 3)
+            {
+                name = "Medium-low";
+                allocation = "50/25/25";
+                riskFreeFractionUpRebalanced = 0.25;
+                bondFraction = 0.25;
+            }
+            else if(i == 4)
+            {
+                name = "Low";
+                allocation = "25/10/65";
+                riskFreeFractionUpRebalanced = 0.65;
+                bondFraction = 0.1;
+            }
+            DEBUG(name);
+            PortfolioSimulationResult result = performSimulation(makeGeneralAsset(100, bondFraction, 0, riskFreeFractionUpRebalanced, returnSpecifier), noSavings, 10000000);
+            double riskFreeRank = result.riskFreeRank(riskFreeReturn);
+
+            Vector<string> row;
+            row.append(name);
+            row.append(allocation);
+            row.append(to_string(result.getMedian()/inflationFactor));
+            row.append(to_string(result.percentiles.getPercentile(0.05)/inflationFactor));
+            row.append(to_string(result.percentiles.getPercentile(0.95)/inflationFactor));
+            row.append(to_string(expectedCRRACertaintyEquivalent(result.percentiles.values, 3)/inflationFactor));
+            row.append(to_string(expectedCRRACertaintyEquivalent(result.percentiles.values, 6)/inflationFactor));
+            row.append(to_string(riskFreeRank));
+            row.append(to_string(result.maxDrawdownPercentiles.getPercentile(0.95)));
+            matrix.append(row);
+        }
+    }
+    //createCSV(matrix, "picked_portfolios_compare.csv");
+}
+
+
+void testOptionInsurance()
+{
+    ReturnSpecifier returnSpecifier;//no tax
+    double price = 100, strikePrice = 80, strikeTime = 1;
+    double geometricReturn = returnSpecifier.getStockReturn() - returnSpecifier.getStockStd() * returnSpecifier.getStockStd()/2;
+    for(int i = 0; i < 6; ++i)
+    {
+        if(i == 0) strikePrice = 80;
+        else if(i == 1) strikePrice = 75;
+        else if(i == 2) strikePrice = 50;
+        else if(i == 3) strikePrice = 25;
+        else if(i == 4) strikePrice = 10;
+        else if(i == 5) strikePrice = 100;
+        DEBUG(strikePrice);
+        double putPrice = priceEuropeanPut(price, returnSpecifier.getRiskFreeRate(), returnSpecifier.getStockReturn(), returnSpecifier.getStockStd(), strikePrice, strikeTime);
+        DEBUG(putPrice/100);
+        DEBUG(geometricReturn - putPrice/100);
+        double riskFreeEquivalentFraction = strikePrice/100;//almost
+        DEBUG(geometricReturn * (1 - riskFreeEquivalentFraction) + returnSpecifier.getRiskFreeRate() * riskFreeEquivalentFraction);
+    }
+}
+
+
 int main()
 {
     testAllAutoFinancialCalculations();
@@ -788,19 +1121,25 @@ int main()
     testMakeReturnFile();
     //return;
     testReturnEstimator();
-    //testMinVarCalculationTotal();
+    testMinVarCalculationTotal();
     //return 0;
+    testMinVarCalculationCurrentAverageReturns();
     testMinVarCalculationCurrent();
     testMinVarCalculationCurrentTaxes();
     testMultiAccountReturns();
     //return 0;
-    testMultiAccountReturnsImbalance();
     testEstimateStockBondRebalance();
+    testGoalSeek();
+    testGoalSeekTargetDatePath();
+    testTotalBondEffect();
+    testOptionInsurance();
     //return 0;
     //testPortfolioSimulationRetirement();
     //testPortfolioSimulationRetirementTaxable5();
     //testPortfolioSimulationRetirementDelay();
-    testPortfolioSimulationNoCashFlow();
+    //testPortfolioSimulationNoCashFlow();
+    //testPortfolioSimulationNoCashFlowUpRebalanced();
+    //testPickedPortfolios();
     //testPortfolioSimulationDCA();
     //testPortfolioSimulationDCAPaths();
     //testPortfolioSimulationRetirementActurial();

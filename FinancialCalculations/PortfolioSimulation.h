@@ -16,11 +16,12 @@ namespace igmdk{
 struct PortfolioSimulationResult
 {
     double ruinChance;
-    PercentileManager percentiles, ruinPercentiles;
+    PercentileManager percentiles, ruinPercentiles, maxDrawdownPercentiles;
     PortfolioSimulationResult(Vector<double> const& values,
-        Vector<double> const& ruinValues): percentiles(values),
+        Vector<double> const& ruinValues,
+        Vector<double> const& maxDrawdownValues): percentiles(values),
         ruinPercentiles(ruinValues.getSize() > 0 ? ruinValues :
-        Vector<double>(1, 0))
+        Vector<double>(1, 0)), maxDrawdownPercentiles(maxDrawdownValues)
     {
         int ruinCount = 0;
         for(int i = 0; i < values.getSize(); ++i) ruinCount += (values[i] <= 0);
@@ -48,6 +49,7 @@ struct PortfolioSimulationResult
         DEBUG(getMedian()/inflationFactor);
         DEBUG(percentiles.getPercentile(0.75)/inflationFactor);
         DEBUG(percentiles.getPercentile(0.95)/inflationFactor);
+        DEBUG(maxDrawdownPercentiles.getPercentile(0.95));
     }
     double riskFreeRank(double riskFreeReturn) const
     {//find position of risk-free-return with modified binary search
@@ -101,6 +103,53 @@ public:
     double getValue()const{return value;}
     void setValue(double newValue){value = newValue;}
 };
+//present
+template<typename RISKY_ASSET> class MixedAsset
+{
+    RISKY_ASSET riskyAsset;
+    RiskFreeAsset riskFreeAsset;
+    double riskFreeFraction;
+    bool isUpRebalanced;
+public:
+    MixedAsset(RISKY_ASSET const& theRiskyAsset,
+        ReturnSpecifier const& returnSpecifier =
+        ReturnSpecifier(), double initialRiskFreeValue = 0,
+        double theRiskFreeFraction = 0, bool theIsUpRebalanced = false):
+        riskyAsset(theRiskyAsset), riskFreeAsset(returnSpecifier,
+        initialRiskFreeValue), riskFreeFraction(theRiskFreeFraction),
+        isUpRebalanced(theIsUpRebalanced) {}
+    void simulateStep(double netSavings)
+    {
+        riskyAsset.simulateStep(netSavings * (1 - riskFreeFraction));
+        riskFreeAsset.simulateStep(netSavings * riskFreeFraction);
+        if(!isUpRebalanced || riskFreeAsset.getValue() <
+           getValue() * riskFreeFraction) setValue(getValue());
+    }
+    double getValue()const
+        {return riskyAsset.getValue() + riskFreeAsset.getValue();}
+    void setValue(double newValue)
+    {
+        riskyAsset.setValue(newValue * (1 - riskFreeFraction));
+        riskFreeAsset.setValue(newValue * riskFreeFraction);
+    }
+};
+//construct from a raw allocation such as 25% stocks/25% bonds/25% risk-free/
+//25% up-rebalanced risk-free, where the weight add up to 1
+MixedAsset<MixedAsset<StockBondAsset>> makeGeneralAsset(double initialValue,
+    double bondFraction, double riskFreeFraction,
+    double riskFreeFractionUpRebalanced = 0,
+    ReturnSpecifier const& returnSpecifier = ReturnSpecifier())
+{
+    assert(initialValue > 0 && bondFraction + riskFreeFraction +
+        riskFreeFractionUpRebalanced <= 1);
+    //convert weights to recursive
+    riskFreeFraction /= 1 - riskFreeFractionUpRebalanced;
+    bondFraction /= 1 - riskFreeFraction;
+    return MixedAsset<MixedAsset<StockBondAsset>>(MixedAsset<StockBondAsset>(
+        StockBondAsset(returnSpecifier, bondFraction), returnSpecifier,
+            riskFreeFraction, false),
+        returnSpecifier, riskFreeFractionUpRebalanced, true);
+}
 
 template<typename FINANCIAL_ASSET>
 PortfolioSimulationResult performActuarialSimulation(FINANCIAL_ASSET const&
@@ -110,10 +159,13 @@ PortfolioSimulationResult performActuarialSimulation(FINANCIAL_ASSET const&
 {
     assert(netSavings.getSize() > 0 && nSimulations > 0 &&
         netSavings.getSize() == nextYearSurvivalProbabilities.getSize());
-    Vector<double> values, ruinValues;
+    Vector<double> values, ruinValues, maxDrawdownValues, breachValues;
+    double inflationRate = ReturnSpecifier().getInflationRate();
     for(int i = 0; i < nSimulations; ++i)
     {
         FINANCIAL_ASSET financialAsset = initialFinancialAsset;
+        double initialValue = financialAsset.getValue(), maxDrawdown = 0,
+            maxValue = initialValue;
         for(int step = 0; step < netSavings.getSize(); ++step)
         {//check if already ruined
             if(financialAsset.getValue() < 0)
@@ -129,10 +181,15 @@ PortfolioSimulationResult performActuarialSimulation(FINANCIAL_ASSET const&
                 break;
             }
             financialAsset.simulateStep(netSavings[step]);
+            double realValue = financialAsset.getValue()/
+                pow(1 + inflationRate, step);
+            if(realValue > maxValue) maxValue = realValue;
+            else maxDrawdown = max(maxDrawdown, 1 - realValue/maxValue);
         }//0 if ruined
         values.append(max(0.0, financialAsset.getValue()));
+        maxDrawdownValues.append(maxDrawdown);
     }
-    return PortfolioSimulationResult(values, ruinValues);
+    return PortfolioSimulationResult(values, ruinValues, maxDrawdownValues);
 }
 template<typename FINANCIAL_ASSET, typename SURVIVAL_ESTIMATOR>
 PortfolioSimulationResult performActuarialSimulation(FINANCIAL_ASSET const&
@@ -216,7 +273,7 @@ PortfolioSimulationResult performSequentialAssetSimulation(
         }//0 if ruined
         values.append(max(0.0, financialAssets.lastItem().getValue()));
     }
-    return PortfolioSimulationResult(values, ruinValues);
+    return PortfolioSimulationResult(values, ruinValues, Vector(1, 0.0));
 }
 Vector<StockBondAsset> makeSequantialAssets(ReturnSpecifier const&
     returnSpecifier, Vector<double> const& bondFractions, double initialValue)
