@@ -38,6 +38,10 @@ public:
         capacity(max(initialSize, int(MIN_CAPACITY))),
         items(rawMemory<ITEM>(capacity))
         {for(int i = 0; i < initialSize; ++i) append(value);}
+    explicit Vector(std::initializer_list<ITEM> args): size(0),
+        capacity(max<int>(args.size(), MIN_CAPACITY)),
+        items(rawMemory<ITEM>(capacity))
+        {for(const auto& item : args) append(item);}
     Vector(Vector const& rhs): capacity(max(rhs.size, int(MIN_CAPACITY))),
         size(rhs.size), items(rawMemory<ITEM>(capacity))
         {for(int i = 0; i < size; ++i) new(&items[i])ITEM(rhs.items[i]);}
@@ -127,6 +131,12 @@ public:
 		for(int j = size++; j > i; --j) items[j] = items[j-1];
 		items[i] = item;
 	}
+
+	//iterators--this enables for-each loop
+	ITEM* begin(){return items;}
+	ITEM* end(){return items + getSize();}
+	ITEM const* begin()const{return items;}
+	ITEM const* end()const{return items + getSize();}
 };
 
 double norm(Vector<double> const& x){return sqrt(dotProduct(x, x));}

@@ -32,9 +32,9 @@ void testFileBasicsAuto()
     DEBUG("testFileBasicsAuto passed");
 }
 
-void testVectorAuto()
+void testEMVectorAuto()
 {
-    DEBUG("testVectorAuto");
+    DEBUG("testEMVectorAuto");
     File::remove("EMVector.igmdk");
     int n = 100000;
     {//this pass write
@@ -52,7 +52,7 @@ void testVectorAuto()
         assert(sum == -n);
     }
     File::remove("EMVector.igmdk");
-    DEBUG("testVectorAuto passed");
+    DEBUG("testEMVectorAuto passed");
 }
 
 void testIOSortAuto()
@@ -116,7 +116,7 @@ void testBTreeAuto()
 void testAllAutoExternalMemoryAlgorithms()
 {
     DEBUG("testAllAutoExternalMemoryAlgorithms");
-    testVectorAuto();
+    testEMVectorAuto();
     testIOSortAuto();
     testBTreeAuto();
 }

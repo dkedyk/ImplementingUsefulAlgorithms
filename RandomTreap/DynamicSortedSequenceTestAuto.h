@@ -58,15 +58,17 @@ template<typename DSS_II> void testNthElementHelper(int n = 100000)
 void testSkipListAuto()
 {
     DEBUG("testSkipListAuto");
-    testMapAutoHelper<SkipList<int, int> >();
+    testMapAutoHelper<SkipList<int, int>>();
+    testMapInitAutoHelper<SkipList<int, int>>();
     DEBUG("testSkipListAuto passed");
 }
 
 void testTreapAuto()
 {
     DEBUG("testTreapAuto");
-    testMapAutoHelper<Treap<int, int> >();
-    testNthElementHelper<Treap<int, int> >();
+    testMapAutoHelper<Treap<int, int>>();
+    testMapInitAutoHelper<Treap<int, int>>();
+    testNthElementHelper<Treap<int, int>>();
     DEBUG("testTreapAuto passed");
 }
 
@@ -93,8 +95,9 @@ template<typename ITEM> struct AsVectorSize1Comparator
 void testLCPTreapAuto()
 {
     DEBUG("testLCPTreapAuto");
-    testMapAutoHelper<LCPTreap<int, int, AsVectorSize1Comparator<int> > >();
-    testNthElementHelper<LCPTreap<Struct10_2, int> >();
+    testMapAutoHelper<LCPTreap<int, int, AsVectorSize1Comparator<int>>>();
+    testMapInitAutoHelper<LCPTreap<int, int, AsVectorSize1Comparator<int>>>();
+    testNthElementHelper<LCPTreap<Struct10_2, int>>();
     DEBUG("testLCPTreapAuto passed");
 }
 

@@ -56,9 +56,16 @@ typename COMPARATOR = DefaultComparator<KEY> > class LinearProbingHashTable
 public:
     typedef Node NodeType;
     int getSize(){return size;}
-    LinearProbingHashTable(int initialCapacity = 8, COMPARATOR const& theC =
-        COMPARATOR()): capacity(nextPowerOfTwo(max<int>(initialCapacity,
+    explicit LinearProbingHashTable(int initialCapacity = 8, COMPARATOR const&
+        theC = COMPARATOR()): capacity(nextPowerOfTwo(max<int>(initialCapacity,
         MIN_CAPACITY))), c(theC), h(capacity) {allocateTable();}
+    explicit LinearProbingHashTable(std::initializer_list<pair<KEY, VALUE>>
+        args): capacity(nextPowerOfTwo(max(args.size(), (size_t)MIN_CAPACITY))),
+        h(capacity) //needs default comparator
+    {
+        allocateTable();
+        for(const auto& entry : args) insert(entry.first, entry.second);
+    }
     LinearProbingHashTable(LinearProbingHashTable const& rhs):
         capacity(rhs.capacity), h(rhs.h), size(rhs.size), c(rhs.c),
         isOccupied(new bool[capacity]), table(rawMemory<Node>(capacity))

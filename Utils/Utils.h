@@ -5,6 +5,7 @@
 #include <limits> //for numeric limits
 #include <type_traits>//for is_trivially_copyable and others
 #include <utility> //for pair
+#include <initializer_list> //for range init
 #include "Debug.h"
 using namespace std;
 namespace igmdk{

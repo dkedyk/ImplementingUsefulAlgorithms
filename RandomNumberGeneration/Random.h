@@ -205,13 +205,18 @@ public:
 template<typename ITEM> class SumHeap
 {
     Vector<ITEM> heap;
-    int parent(int i){return (i - 1)/2;}
-    int leftChild(int i){return 2 * i + 1;}
-    int rightChild(int i){return 2 * i + 2;}
+    int parent(int i)const{return (i - 1)/2;}
+    int leftChild(int i)const{return 2 * i + 1;}
+    int rightChild(int i)const{return 2 * i + 2;}
 public:
-    ITEM total(){return heap[0];}
+    explicit SumHeap(){}
+    explicit SumHeap(std::initializer_list<ITEM> args)
+        {for(const auto& item : args) add(item);}
+    int getSize()const{return heap.getSize();}
 
-    ITEM get(int i)
+    ITEM total()const{return heap[0];}
+
+    ITEM get(int i)const
     {
         ITEM result = heap[i];
         int c = leftChild(i);
@@ -225,10 +230,10 @@ public:
     }
 
     void add(ITEM value, int i = -1)
-    {//-1 means no nodes yet
+    {//-1 means append
         if(i == -1)
         {
-            i = heap.getSize();
+            i = getSize();
             heap.append(0);
         }
         for(;; i = parent(i))
@@ -238,7 +243,7 @@ public:
         }
     }
 
-    int find(ITEM value)
+    int find(ITEM value)const
     {
         assert(0 <= value && value <= total());
         ITEM totalLeftValue = 0;
@@ -255,13 +260,14 @@ public:
             }
         }
     }
-    int next(){return find(GlobalRNG().uniform01()*total());}
+    int next()const{return find(GlobalRNG().uniform01() * total());}
 
-    ITEM cumulative(int i)
+    //not presented only for testing
+    ITEM cumulative(int i)const
     {
         ITEM sum = heap[i];
         while(i > 0)
-        {//add value of every left sibling if
+        {//add value of every left sibling
             int last = i;
             i = parent(i);
             int l = leftChild(i);

@@ -51,9 +51,16 @@ template<typename KEY, typename VALUE, typename HASHER = EHash<BUHash>,
 public:
     typedef Node NodeType;
     int getSize(){return size;}
-    ChainingHashTable(int initialCapacity = 8, COMPARATOR const&
+    explicit ChainingHashTable(int initialCapacity = 8, COMPARATOR const&
         theC = COMPARATOR()): capacity(nextPowerOfTwo(max<int>(initialCapacity,
         MIN_CAPACITY))), c(theC), h(capacity), size(0) {allocateTable();}
+    explicit ChainingHashTable(std::initializer_list<pair<KEY, VALUE>> args):
+        capacity(nextPowerOfTwo(max(args.size(), (size_t)MIN_CAPACITY))),
+        h(capacity), size(0) //needs default comparator
+    {
+        allocateTable();
+        for(const auto& entry : args) insert(entry.first, entry.second);
+    }
     ChainingHashTable(ChainingHashTable const& rhs): capacity(rhs.capacity),
         size(rhs.size), h(rhs.h), table(new Node*[capacity]), c(rhs.c)
     {//copy just mirrors the source, without trying to compact

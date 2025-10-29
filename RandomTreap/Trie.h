@@ -132,7 +132,8 @@ template<typename ITEM, typename KEY_OBJECT = unsigned char, typename
         return result;
     }
 public:
-    TernaryTreapTrie(COMPARATOR const& theC = COMPARATOR()): root(0), c(theC){}
+    explicit TernaryTreapTrie(COMPARATOR const& theC = COMPARATOR()): root(0),
+        c(theC){}
     TernaryTreapTrie(TernaryTreapTrie const& other):
         c(other.c){root = constructFrom(other.root);}
     TernaryTreapTrie& operator=(TernaryTreapTrie const& rhs)

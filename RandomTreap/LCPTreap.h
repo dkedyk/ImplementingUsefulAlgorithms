@@ -69,7 +69,10 @@ template<typename KEY, typename VALUE, typename INDEXED_COMPARATOR =
     }
 public:
     typedef Node NodeType;
-    LCPTreap(INDEXED_COMPARATOR theC = INDEXED_COMPARATOR()):root(0), c(theC){}
+    explicit LCPTreap(INDEXED_COMPARATOR theC = INDEXED_COMPARATOR()): root(0),
+        c(theC){}
+    explicit LCPTreap(std::initializer_list<pair<KEY, VALUE>> args): root(0)
+        {for(const auto& entry : args) insert(entry.first, entry.second);}
     LCPTreap(LCPTreap const& other): c(other.c)
         {root = constructFrom(other.root);}
     LCPTreap& operator=(LCPTreap const&rhs){return genericAssign(*this,rhs);}

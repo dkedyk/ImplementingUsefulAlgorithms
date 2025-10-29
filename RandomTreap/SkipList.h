@@ -21,8 +21,14 @@ template<typename KEY, typename VALUE, typename COMPARATOR =
     Freelist<Node> f;
     int currentLevel;
 public:
-    SkipList(COMPARATOR const& theC = COMPARATOR()): currentLevel(0), c(theC)
-        {for(int i = 0; i < MAX_HEIGHT; ++i) head[i] = 0;}
+    explicit SkipList(COMPARATOR const& theC = COMPARATOR()): currentLevel(0),
+        c(theC) {for(int i = 0; i < MAX_HEIGHT; ++i) head[i] = 0;}
+    explicit SkipList(std::initializer_list<pair<KEY, VALUE>> args):
+        currentLevel(0)
+    {//needs default comparator
+        for(int i = 0; i < MAX_HEIGHT; ++i) head[i] = 0;
+        for(const auto& entry : args) insert(entry.first, entry.second);
+    }
     SkipList(SkipList const& rhs): currentLevel(0), c(rhs.c)
     {//order of items with nonunique keys in copy is reversed
         for(int i = 0; i < MAX_HEIGHT; ++i) head[i] = 0;

@@ -4,6 +4,7 @@
 #include "PrimeTable.h"
 #include "CombinatorialGeneration.h"
 #include "KBitWordVector.h"
+#include "FenwickTree.h"
 
 using namespace std;
 
@@ -53,12 +54,25 @@ void testKBitVectorAuto()
     DEBUG("testKBitVectorAuto passed");
 }
 
+void testFenwickTreeAuto()
+{
+    DEBUG("testFenwickTreeAuto");
+    FenwickTree<int> ft(3);
+    ft.addValue(0, 1);
+    ft.addValue(1, 1);
+    ft.addValue(2, 1);
+    assert(ft.getCumulativeValue(2) == 3);
+    assert(ft.getValue(2) == 1);
+    DEBUG("testFenwickTreeAuto passed");
+}
+
 void testAllAutoMiscAlgorithms()
 {
     DEBUG("testAllAutoMicAlgorithms");
     testLRUAuto();
     testPrimeTableAuto();
     testKBitVectorAuto();
+    testFenwickTreeAuto();
 }
 
 }//end namespace

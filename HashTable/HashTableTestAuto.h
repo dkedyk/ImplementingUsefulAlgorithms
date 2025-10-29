@@ -11,6 +11,7 @@ void testChainingHashTableAuto()
 {
     DEBUG("testChainingHashTableAuto");
     testMapAutoHelper<ChainingHashTable<int, int> >();
+    testMapInitAutoHelper<ChainingHashTable<int, int> >();
     DEBUG("testChainingHashTableAuto passed");
 }
 
@@ -18,6 +19,7 @@ void testLinearProbingHashTableAuto()
 {
     DEBUG("testLinearProbingHashTableAuto");
     testMapAutoHelper<LinearProbingHashTable<int, int> >();
+    testMapInitAutoHelper<LinearProbingHashTable<int, int> >();
     DEBUG("testLinearProbingHashTableAuto passed");
 }
 

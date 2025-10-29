@@ -51,6 +51,34 @@ template<typename MAP_II> void testMapAutoHelper(int n = 100000)
         seen.set(i->key, true);
         assert(i->value == -i->key);
     }
+    //test for each
+    for(auto const& entry : m)
+    {
+        assert(entry.value == -entry.key);
+    }
+    assert(seen == allSet);
+    for(int i = 0; i < n; ++i)
+    {
+        assert(m.find(i));
+        assert(*m.find(i) == -i);
+        m.remove(i);
+        assert(!m.find(i));
+    }
+}
+
+template<typename MAP_II> void testMapInitAutoHelper()
+{
+    int n = 5;
+    MAP_II m{{0, 0}, {1, -1},{2, -2},{3, -3},{4, -4}};
+    Bitset<> seen(n), allSet(n);
+    seen.setAll(false);
+    allSet.setAll(true);
+    for(auto const& entry : m)
+    {
+        assert(!seen[entry.key]);
+        seen.set(entry.key, true);
+        assert(entry.value == -entry.key);
+    }
     assert(seen == allSet);
     for(int i = 0; i < n; ++i)
     {

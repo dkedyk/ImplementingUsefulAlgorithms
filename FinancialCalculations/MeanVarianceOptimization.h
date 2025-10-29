@@ -44,7 +44,7 @@ struct MeanVariancePortfolio
         //0.05^2  0.10^2 -0.035  -1
         //0.07    0.035   0     0
         //   1     1    0     0
-        // and b = [0, 0, 0.06, 1] (transposed)
+        //and b = [0, 0, 0.06, 1] (transposed)
         int n = means.getSize(), m = n + 2;
         Matrix<double> A(m, m);
         for(int column = 0; column < n; ++column)
@@ -62,7 +62,7 @@ struct MeanVariancePortfolio
         Vector<double> b(m, 0);
         b[m - 2] = targetMean;
         b[m - 1] = 1;
-
+        //use LUP decomposition to solve
         LUP lup(A);
         Vector<double> wlm = lup.solve(b);
         wlm.removeLast();//remove l
@@ -135,6 +135,94 @@ MeanVariancePortfolio makeStockBondMVP(ReturnSpecifier const& returnSpecifier)
         returnSpecifier.getStockBondCorrelation() * sqrt(covariances(0, 0) *
         covariances(1, 1));
     return MeanVariancePortfolio(means, covariances);
+}
+
+double getTangencyStockFraction(ReturnSpecifier const& returnSpecifier)
+{
+    MeanVariancePortfolio mvp(makeStockBondMVP(returnSpecifier));
+    pair<double, Vector<double> > tangency =
+        mvp.findOptimalSharpeWeights(returnSpecifier.getRiskFreeRate());
+    return tangency.second[0];
+}
+
+//returns financial weights of risk-free, bonds, and stocks, and the CRRA
+//certainty equivalent
+pair<Vector<double>, double> getRiskFreeBondStockWeights(double
+    weightNonfinancial, double weightTaxEfficient, double a, ReturnSpecifier
+    const& returnSpecifier, ReturnSpecifier const& returnSpecifierTaxable,
+    Vector<double> const& evaluateRBS, bool allowBondsInTaxable = true, double
+    minRiskFreeWeight = 0)
+{
+    assert(weightNonfinancial >= 0 && weightNonfinancial < 1 &&
+        weightTaxEfficient >= 0 && weightTaxEfficient <= 1 && a > 0 &&
+        (evaluateRBS.getSize() == 0 || evaluateRBS.getSize() == 3) &&
+        minRiskFreeWeight >= 0 && minRiskFreeWeight <= 1);
+    double stockTaxPenalty = returnSpecifier.getStockReturn() -
+        returnSpecifierTaxable.getStockReturn(),
+        bondTaxPenalty = returnSpecifier.getBondReturn() -
+        returnSpecifierTaxable.getBondReturn(),
+        riskFreeTaxPenalty = returnSpecifier.getRiskFreeRate() -
+        returnSpecifierTaxable.getRiskFreeRate(),
+        bondTaxDelta = bondTaxPenalty - stockTaxPenalty,
+        riskFreeTaxDelta = riskFreeTaxPenalty - stockTaxPenalty;
+    auto minObjective = [weightNonfinancial, weightTaxEfficient, a,
+        stockTaxPenalty, bondTaxDelta, riskFreeTaxDelta, &returnSpecifier,
+        allowBondsInTaxable, minRiskFreeWeight]
+        (Vector<double> const& x)
+    {
+        double weightRiskFree = x[0], weightBond = x[1],
+            weightStock = 1 - weightNonfinancial - weightRiskFree - weightBond,
+            taxExtraPenalty = riskFreeTaxDelta *
+            max(0.0, weightRiskFree + weightBond - weightTaxEfficient) +
+            bondTaxDelta *
+            max(0.0, weightRiskFree + weightBond - weightTaxEfficient);
+        if(weightRiskFree + weightBond > weightTaxEfficient)
+        {
+            double bondTaxable = max(0.0, weightBond - weightTaxEfficient),
+            riskFreeTaxable = weightRiskFree -
+                max(0.0, weightTaxEfficient - weightBond);
+            taxExtraPenalty = bondTaxable * bondTaxDelta +
+                riskFreeTaxable * riskFreeTaxDelta;
+        }
+        double taxPenalty = stockTaxPenalty * (1 - weightTaxEfficient) +
+            taxExtraPenalty;
+        double expectedReturn = (weightNonfinancial + weightRiskFree) *
+            returnSpecifier.getRiskFreeRate() +
+            weightBond * returnSpecifier.getBondReturn() +
+            weightStock * returnSpecifier.getStockReturn() -
+            taxPenalty * (1 - weightNonfinancial) -
+            returnSpecifier.getInflationRate();
+        double var = (pow(weightBond * returnSpecifier.getBondStd(), 2) +
+            weightBond * returnSpecifier.getBondStd() *
+            returnSpecifier.getStockBondCorrelation() * weightStock *
+            returnSpecifier.getStockStd() +
+            pow(weightStock * returnSpecifier.getStockStd(), 2));
+        double crra = expectedReturn - a/2 * var,
+            penalty = 1000 * (max(0.0, -weightRiskFree) + max(0.0, -weightBond)
+            + max(0.0, -weightStock) +
+            (weightRiskFree < minRiskFreeWeight * (1 - weightNonfinancial)));
+        if(!allowBondsInTaxable)
+            penalty += 1000 * (weightBond > weightTaxEfficient);
+        return -crra + penalty;
+    };
+    pair<Vector<double>, double> result;
+    if(evaluateRBS.getSize() == 3)
+    {//only evaluated specified risk-free-stock-bond combination
+        Vector<double> x0 = evaluateRBS;
+        x0.removeLast();
+        x0 *= 1 - weightNonfinancial;
+        result = {x0, minObjective(x0)};
+    }
+    else
+    {//optimize
+        Vector<double> x0(2, 0);// start with 0 bond and correct risk-free
+        x0[0] = minRiskFreeWeight * (1 - weightNonfinancial);
+        result = hybridLocalMinimize(x0, minObjective);
+    }
+    Vector<double> fullResult = result.first;
+    fullResult.append(1 - weightNonfinancial - fullResult[0] - fullResult[1]);
+    fullResult *= 1/(1 - weightNonfinancial);
+    return {fullResult, -result.second};
 }
 
 }//end namespace

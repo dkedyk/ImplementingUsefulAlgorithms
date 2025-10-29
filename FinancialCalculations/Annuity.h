@@ -62,7 +62,7 @@ Vector<double> getSSAFemaleDeathProbabilities()
 }
 
 Vector<double> getSSADeathProbabilities()
-{//gender - neural - weighted using male/female ratio 1:1
+{//gender-neural - weighted using male/female ratio 1:1
     return (getSSAMaleDeathProbabilities() + getSSAFemaleDeathProbabilities()) *
         0.5;
 }
@@ -84,15 +84,6 @@ class SurvivalEstimator
 {
     Vector<double> percentSurvivedByAge;
 public:
-    double getSurvivalProbability(int ageNow, int ageUntil) const
-    {
-        assert(ageNow >= 0 && ageNow <= ageUntil);
-        //corner cases - ageUntil and possibly ageNow past table knowledge
-        if(ageUntil >= percentSurvivedByAge.getSize()) return 0;
-        double percentUntil = percentSurvivedByAge[ageUntil];
-        double percentNow = percentSurvivedByAge[ageNow];
-        return percentUntil/percentNow;//account for current age
-    }
     SurvivalEstimator(Vector<double> const& percentSurvivedByAgeTable):
         percentSurvivedByAge(percentSurvivedByAgeTable)
     {//survival is percentage and nonincreasing in age
@@ -103,6 +94,15 @@ public:
                 percentSurvivedByAge[i] >= 0);
             prevPercent = percentSurvivedByAge[i];
         }
+    }
+    double getSurvivalProbability(int ageNow, int ageUntil) const
+    {
+        assert(ageNow >= 0 && ageNow <= ageUntil);
+        //corner cases - ageUntil and possibly ageNow past table knowledge
+        if(ageUntil >= percentSurvivedByAge.getSize()) return 0;
+        double percentUntil = percentSurvivedByAge[ageUntil];
+        double percentNow = percentSurvivedByAge[ageNow];
+        return percentUntil/percentNow;//account for current age
     }
 };
 
@@ -149,9 +149,12 @@ public:
         nPaymentsPerAgeUnit(theNPaymentsPerAgeUnit),
         survivalEstimator(theSurvivalEstimator), initialFee(theInitialFee),
         annualFee(theAnnualFee), tableDelay(theTableDelay)
-    {assert(theAge >= 0 && theNPaymentsPerAgeUnit > 0 && theDeferralYears >= 0
-        && 0 <= theStepUpR && 0 <= initialFee && initialFee < 1 &&
-        0 <= annualFee && annualFee < 1 && 0 <= tableDelay && tableDelay < 10);}
+    {
+        assert(theAge >= 0 && theNPaymentsPerAgeUnit > 0 &&
+            theDeferralYears >= 0 && 0 <= theStepUpR && 0 <= initialFee &&
+            initialFee < 1 && 0 <= annualFee && annualFee < 1 && 0 <= tableDelay
+            && tableDelay < 10);
+    }
     Vector<double> calculateEstimatedCashFlow(double payment) const
     {
         assert(payment > 0 && isfinite(payment));
@@ -166,7 +169,8 @@ public:
             if(ageNext < age + deferralYears) expectedPayment = 0;
             else if(stepUpR > 0)
                 expectedPayment *= pow(1 + stepUpR, ageNext - age);
-            //assume same payment without smoothing for survival change
+            //assume same monthly payment without smoothing for survival change
+            //in the last year
             for(int i = 0; i < nPaymentsPerAgeUnit; ++i)
                 cashFlow.append(expectedPayment);
         }
@@ -189,10 +193,11 @@ public:
         //solve for r such that price equals to calculated price
         auto priceFunctor = [price, r, this](double payment)
             {return calculatePrice(payment, r) - price;};
-        return exponentialSearch1Sided(priceFunctor, 0).first;
+        return exponentialSearch1Sided(priceFunctor,
+            numeric_limits<double>::epsilon()).first;
     }
     double calculateYield(double price, double payment) const
-    {//no price and r adjustments for yield calculation
+    {
         Vector<double> cashFlow = calculateEstimatedCashFlow(payment);
         return igmdk::calculateYieldGeneral(cashFlow,
             getDatesFrom0(cashFlow.getSize(), 1.0/nPaymentsPerAgeUnit), price);

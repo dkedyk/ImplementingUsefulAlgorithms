@@ -150,7 +150,9 @@ template<typename KEY, typename VALUE, typename COMPARATOR =
 public:
     typedef Node NodeType;
     unsigned int getSize(){return root ? root->nodeCount : 0;}
-    Treap(COMPARATOR const& theC = COMPARATOR()): root(0), c(theC){}
+    explicit Treap(COMPARATOR const& theC = COMPARATOR()): root(0), c(theC){}
+    explicit Treap(std::initializer_list<pair<KEY, VALUE>> args): root(0)
+        {for(const auto& entry : args) insert(entry.first, entry.second);}
     Treap(Treap const& other): c(other.c)
     {
         root = constructFrom(other.root);

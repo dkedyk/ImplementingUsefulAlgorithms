@@ -24,7 +24,7 @@ class ReturnSpecifier
 {//returns for funds of securities predicted
 //include NIIT and federal and capital gain taxes
 public:
-    //all rates are percentages, not multiples
+    //all rates are %, not 1 + %
     double stockReturn, stockStd, bondReturn, bondStd, stockBondCorrelation,
         riskFreeRate, taxRateCapitalGains, taxRateFederal, taxRateLocal,
         stockDividend, bondCoupon, bondTreasuryFraction, inflationRate;
@@ -49,11 +49,13 @@ public:
             getBondAfterTaxCoupon();
     }
     double getRiskFreeRate()const
-        {return riskFreeRate * (1 - getTotalIncomeTax());}
+        {return riskFreeRate * (1 - taxRateFederal);}
     double getStockStd()const{return stockStd;}
     double getBondStd()const{return bondStd;}
     double getStockBondCorrelation()const{return stockBondCorrelation;}
     double getInflationRate()const{return inflationRate;}
+    double getRealRiskFreeRate()const
+        {return getRiskFreeRate() - getInflationRate();}
     //defaults need constant updating - calculated as of early 2025
     ReturnSpecifier(double theTaxRateCapitalGains = 0,
         double theTaxRateFederal = 0, double theTaxRateLocal = 0,
@@ -228,42 +230,6 @@ struct PercentileManager
     }
 };
 
-LognormalDistribution multigoalAdjustedLognormal(ReturnSpecifier const&
-    returnSpecifier, Vector<pair<double, int>> const& goalWeights, int nYears)
-{//action takes place at the end of year with growth and payments
-    LognormalDistribution current, annual(1 +
-        returnSpecifier.getStockReturn(), returnSpecifier.getStockStd());
-    double remainingFraction = 1;
-    for(int year = 1; year <= nYears; ++year)
-    {//update with time
-        current += annual;
-        double goalAsW0Fraction = 0;
-        for(int i = 0; i < goalWeights.getSize(); ++i)
-        {//simple inefficient search
-            if(year == goalWeights[i].second)
-            {
-                goalAsW0Fraction = goalWeights[i].first;
-                break;
-            }
-        }
-        if(goalAsW0Fraction != 0)
-        {//recalculate based on mean-variance matching
-            remainingFraction -= goalAsW0Fraction;
-            double newMean = current.getMean() - goalAsW0Fraction *
-                pow(1 + returnSpecifier.getRiskFreeRate(), year);
-            assert(newMean > 0);
-            current = LognormalDistribution(newMean, current.getStdev());
-        }
-    }
-    assert(remainingFraction > 0);
-    //scale for implicit leverage
-    current = LognormalDistribution(current.getMean()/remainingFraction,
-        current.getStdev()/remainingFraction);
-    //adjust for geometric for single year
-    current *= 1.0/nYears;
-    return current;
-}
-
 double CRRAUtility(double wealth, double a)
 {
     if(wealth <= 0) return -numeric_limits<double>::infinity();
@@ -285,6 +251,17 @@ double expectedCRRACertaintyEquivalent(Vector<double> const& values, double a)
     for(int i = 0; i < values.getSize(); ++i)
         s.addValue(CRRAUtility(values[i], a));
     return inverseCRRAUtility(s.getMean(), a);
+}
+
+double ordinaryAnnuityPV(double payment, int n, double r)
+{
+    assert(payment > 0 && n > 0 && r > 0);
+    return payment * (1 - pow(1 + r, -n))/r;
+}
+double ordinaryAnnuityPayment(double PV, int n, double r)
+{
+    assert(PV > 0 && n > 0 && r > 0);
+    return PV/((1 - pow(1 + r, -n))/r);
 }
 
 }//end namespace

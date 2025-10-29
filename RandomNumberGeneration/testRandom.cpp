@@ -7,18 +7,32 @@ void testSumHeap()
 {
     int N = 1000000;
     SumHeap<double> sh;
-    sh.add(0);
-	sh.add(1.0/36);
-	sh.add(2.0/36);
-	sh.add(3.0/36);
-	sh.add(4.0/36);
-	sh.add(5.0/36);
-	sh.add(6.0/36);
-	sh.add(5.0/36);
-	sh.add(4.0/36);
-	sh.add(3.0/36);
-	sh.add(2.0/36);
-	sh.add(1.0/36);
+    //sum of two dice
+	sh.add(1.0/36);//2
+	sh.add(2.0/36);//3
+	sh.add(3.0/36);//4
+	sh.add(4.0/36);//5
+	sh.add(5.0/36);//6
+	sh.add(6.0/36);//7
+	sh.add(5.0/36);//8
+	sh.add(4.0/36);//9
+	sh.add(3.0/36);//10
+	sh.add(2.0/36);//11
+	sh.add(1.0/36);//1
+
+	for(double cdf = 0.1; cdf <= 1.000001; cdf += 0.1)
+    {
+        DEBUG(sh.find(cdf));
+    }
+
+
+	for(int i = 0; i < sh.getSize(); ++i)
+    {
+        DEBUG(i);
+        DEBUG(sh.cumulative(i));
+    }
+
+
     int sum = 0;
     for(int i = 0 ; i < N; ++i) sum += sh.next();
     DEBUG(sum*1.0/N);
@@ -54,11 +68,11 @@ void testGenerators()
     DEBUG(dummy);
 
     SumHeap<double> st;
+    st.add(0.1);
+    st.add(0.1);
     st.add(0.2);
-    st.add(0.2);
-    st.add(0.2);
-    st.add(0.2);
-    st.add(0.2);
+    st.add(0.3);
+    st.add(0.3);
     DEBUG(st.total());
     DEBUG(st.find(0.1));
     DEBUG(st.find(0.3));
@@ -163,15 +177,10 @@ void testIncremental()
 int main(int argc, char *argv[])
 {
     testMultivarNormal();
-    return 0;
     testGenerators();
-    return 0;
     DDDAlias();
-    return 0;
     DDDSumHeap();
-    return 0;
     testSumHeap();
-    return 0;
     testIncremental();
     return 0;
 }

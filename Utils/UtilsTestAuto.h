@@ -34,6 +34,51 @@ void testComparatorsAuto()
     DEBUG("testComparatorsAuto passed");
 }
 
+void testVectorAuto()
+{
+    DEBUG("testVectorAuto");
+    {
+        Vector<int> v;
+        assert(v.getSize() == 0);
+        int sumCorrect = 0;
+        for(int i = 0; i < 10; ++i)
+        {
+            v.append(i);
+            assert(v.getSize() == i + 1);
+            assert(v[i] == i);
+            sumCorrect += i;
+        }
+        int sum = 0;
+        for(auto& vi : v)
+        {
+            sum += vi;
+            vi += 1;
+        }
+        assert(sum == sumCorrect);
+        for(int i = 0; i < 10; ++i)
+        {
+            assert(v[i] == i + 1);
+        }
+
+        auto summer = [](Vector<int> const& v)
+        {
+            int sum = 0;
+            for(auto const& vi : v) sum += vi;
+            return sum;
+        };
+        assert(summer(v) == sumCorrect + 10);
+    }
+    {
+        Vector<int> v{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        assert(v.getSize() == 10);
+        for(int i = 0; i < 10; ++i)
+        {
+            assert(v[i] == i);
+        }
+    }
+    DEBUG("testVectorAuto passed");
+}
+
 void testStackAuto()
 {
     DEBUG("testStackAuto");
@@ -214,6 +259,7 @@ void testAllAutoUtils()
 {
     DEBUG("testAllAutoUtils");
     testComparatorsAuto();
+    testVectorAuto();
     testStackAuto();
     testQueueAuto();
     testLgAuto();
