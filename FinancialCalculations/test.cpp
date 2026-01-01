@@ -97,7 +97,7 @@ void testMakeReturnFile()
     matrix.append(Vector<string>(2*n, ""));
     Vector<string> constants(2 * n, "");
     constants[0] = "Geometric:";
-    constants[1] = to_string(stockReturns.getMedian()-1);
+    constants[1] = to_string(stockReturns.getMedian() - 1 + returnSpecifier.getInflationRate());
     constants[2] = "Treasury:";
     constants[3] = to_string(returnSpecifier.getRiskFreeRate());
     constants[4] = "Inflation:";
@@ -107,7 +107,7 @@ void testMakeReturnFile()
     constants[7] = to_string(mvp.findOptimalSharpeWeights(
         returnSpecifier.getRiskFreeRate()).second[0]);
     constants[8] = "Bonds:";
-    constants[9] = to_string(bondReturns.getMedian()-1);
+    constants[9] = to_string(bondReturns.getMedian() - 1  + returnSpecifier.getInflationRate());
     constants[10] = "GeometricReturns100By5:";
 
 
@@ -139,9 +139,9 @@ void testMakeReturnFile()
     {
         Vector<string> row;
         for(int i = 0; i < n; ++i)
-            row.append(to_string(stockReturns.sample()-1));
+            row.append(to_string(stockReturns.sample() - 1 + returnSpecifier.getInflationRate()));
         for(int i = 0; i < n; ++i)
-            row.append(to_string(bondReturns.sample()-1));
+            row.append(to_string(bondReturns.sample() - 1 + returnSpecifier.getInflationRate()));
         matrix.append(row);
     }
     //createCSV(matrix, "return_simulations.csv");
@@ -216,9 +216,9 @@ void testAnnuityAutoSingleFemaleSpending()
 void testReturnEstimator()
 {
     DEBUG("Return Estimator");
-    //From early 2025:
-    double pe = 28.2, bondYield = 0.05, inflation = 0.024, stdevStock = 0.17, stdevBond = stdevStock/2, riskFreeRate = 0.046, dp = 0.012, earningsGrowth = 0.04;
-    double internationalPE = 15.78, usFraction = 0.66;
+    //From early 2026:
+    double pe = 29.3, bondYield = 0.044, inflation = 0.023, stdevStock = 0.17, stdevBond = stdevStock/2, riskFreeRate = 0.042, dp = 0.011, earningsGrowth = 0.04;
+    double internationalPE = 18.3, usFraction = 0.63;
     double stockReturnUS = estimateArithmeticNominalStockReturn(pe, inflation, stdevStock, dp, earningsGrowth);
     double stockReturnEXUS = estimateArithmeticNominalStockReturn(internationalPE, inflation, stdevStock);
     double totalStockReturn = stockReturnUS * usFraction + stockReturnEXUS * (1 - usFraction);
@@ -609,9 +609,9 @@ void testPortfolioSimulationDCAVarious()
             results.append({"Constrained0209", result});
         }
         {
-            DEBUG("Static");
+            DEBUG("Constant");
             PortfolioSimulationResult result = performSimulation(makeMVOptimalRiskyAsset(initialValue, percentStock/100.0, tangencyStockFraction, returnSpecifier), dcaSavings);
-            results.append({"Static", result});
+            results.append({"Constant", result});
         }
 
         for(int i = 0; i < results.getSize(); ++i)
@@ -1318,38 +1318,38 @@ void testPickedPortfolios()
             }
             else if(i == 2)
             {
-                name = "Start70";
-                allocation = "70/30/0";
-                bondFraction = 0.3;
-                riskFreeFraction = 0.1;
+                name = "Start75";
+                allocation = "75/25/0";
+                bondFraction = 0.25;
+                riskFreeFraction = 0;
             }
             else if(i == 3)
             {
                 name = "Medium3";
-                allocation = "60/30/10";
-                bondFraction = 0.3;
-                riskFreeFraction = 0.1;
+                allocation = "60/20/20";
+                bondFraction = 0.2;
+                riskFreeFraction = 0.2;
             }
             else if(i == 4)
             {
                 name = "Medium4";
-                allocation = "40/20/40";
-                bondFraction = 0.2;
+                allocation = "45/15/40";
+                bondFraction = 0.15;
                 riskFreeFraction = 0.4;
             }
             else if(i == 5)
             {
                 name = "Low6";
-                allocation = "30/15/55";
-                bondFraction = 0.15;
-                riskFreeFraction = 0.55;
+                allocation = "30/10/60";
+                bondFraction = 0.1;
+                riskFreeFraction = 0.6;
             }
             else if(i == 6)
             {
                 name = "Low8";
-                allocation = "20/10/70";
-                bondFraction = 0.1;
-                riskFreeFraction = 0.7;
+                allocation = "20/5/75";
+                bondFraction = 0.05;
+                riskFreeFraction = 0.75;
             }
             DEBUG(name);
             PortfolioSimulationResult result = performSimulation(makeGeneralAsset(100, bondFraction, riskFreeFraction, 0, returnSpecifier), noSavings, 10000000);
@@ -1407,7 +1407,7 @@ struct FinancialIndependenceSimRecorder
     int startAge, retirementEmergencyFundUnits;
     Vector<bool> simulationRecorded;
     int maxSteps;
-    bool use25X;
+    bool useSWR;
     void operator()(int simulation, int step, double realWealth)
     {
         if(!simulationRecorded[simulation])
@@ -1415,10 +1415,7 @@ struct FinancialIndependenceSimRecorder
             if(step < maxSteps)
             {
                 int age = startAge + step;
-                //DEBUG(age);
-                //DEBUG(realWealth);
-                //DEBUG(calculateRetirementNeedTo120(age, retirementEmergencyFundUnits, realRiskFreeRate));
-                if(use25X ? (realWealth >= 25) : (realWealth >= calculateRetirementNeedTo120(age,
+                if(useSWR ? (realWealth >= 50) : (realWealth >= calculateRetirementNeedTo120(age,
                     retirementEmergencyFundUnits, realRiskFreeRate)))
                 {//got enough
                     stepsToIndepence.append(age);
@@ -1435,7 +1432,7 @@ struct FinancialIndependenceSimRecorder
 };
 PercentileManager performFinancialIndepenceSimulation(int age,
     double currentMultiple, double savingsMultiple,
-    int retirementEmergencyFundUnits, double stockFraction, bool use25X, int nSimulations = 1000000)
+    int retirementEmergencyFundUnits, double stockFraction, bool useSWR, int nSimulations = 1000000)
 {//calculate distribution of age hitting financial independence, assuming have
     //constant real consumption and will use guaranteed funding to 120
     ReturnSpecifier returnSpecifier;//no tax
@@ -1445,7 +1442,7 @@ PercentileManager performFinancialIndepenceSimulation(int age,
     sr.maxSteps = dcaSavings.getSize();
     sr.simulationRecorded = Vector<bool>(nSimulations, false);
     sr.startAge = age;
-    use25X = use25X;
+    sr.useSWR = useSWR;
     sr.retirementEmergencyFundUnits = retirementEmergencyFundUnits;
     //ignore sim result, only use recorder output
     performActuarialSimulation(makeMVOptimalRiskyAsset(currentMultiple, stockFraction, getTangencyStockFraction(returnSpecifier), returnSpecifier), sr,//replace by optimal asset given tangency
@@ -1464,11 +1461,11 @@ void testFinancialIndependenceDistribution()
     double currentMultiple = 0;//save nothing so far
     double savingsMultiple = 0.5;//saving half of income
     int retirementEmergencyFundUnits = 5;//need 5 years of retirement emergency fund
-    bool use25X = true;
+    bool useSWR = false;
     for(int percentStock = 0; percentStock <= 100; percentStock += 20)
     {
         DEBUG(percentStock);
-        PercentileManager percentiles = performFinancialIndepenceSimulation(age, currentMultiple, savingsMultiple, retirementEmergencyFundUnits, percentStock/100.0, use25X);
+        PercentileManager percentiles = performFinancialIndepenceSimulation(age, currentMultiple, savingsMultiple, retirementEmergencyFundUnits, percentStock/100.0, useSWR);
         DEBUG(percentiles.getPercentile(0.05));
         DEBUG(percentiles.getPercentile(0.25));
         DEBUG(percentiles.getPercentile(0.5));
@@ -1494,7 +1491,7 @@ void testFinancialIndependenceDistribution()
                 if(ageJ <= ageFI) CRRAValues.append(1);
             }
             //CRRA utility assuming will spend using ARVA
-            if(use25X && survivedToRetirement)
+            if(useSWR && survivedToRetirement)
             {
                 //calculate survivalProbabilities
                 Vector<double> nextYearSurvivalProbabilities;
@@ -1502,14 +1499,14 @@ void testFinancialIndependenceDistribution()
                 {
                     nextYearSurvivalProbabilities.append(getFutureSurvivalProbability(e, ageJ - age));
                 }
-                double retirementAmount = 25;
+                double retirementAmount = 50;
                 StockBondAsset asset(returnSpecifier, retirementAmount, 1 - percentStock/100.0);
                 double discountRate = StockBondAsset::makeReturnDistribution(returnSpecifier, 1 - percentStock/100.0).getMedian() - 1;
-                PortfolioSimulationResult result = performActuarialARVASimulation(asset, discountRate, nextYearSurvivalProbabilities, 1);
+                PortfolioSimulationResult result = performActuarialARVASimulation(asset, discountRate, nextYearSurvivalProbabilities, true, 1);
                 CRRAValues.appendVector(result.percentiles.values * 2);//double amounts for retirement
             }
         }
-        if(use25X)
+        if(useSWR)
         {
             //calculate CRRA utility
             DEBUG(expectedCRRACertaintyEquivalent(CRRAValues, 1));
@@ -1758,6 +1755,7 @@ int main()
     testMakeReturnFile();
     //return 0;
     testReturnEstimator();
+    //return 0;
     testMinVarCalculationTotal();
     //return 0;
     //testMinVarCalculationCurrentAverageReturns();
@@ -1778,7 +1776,7 @@ int main()
     //testPortfolioSimulationRetirementActurial();
     //testPortfolioSimulationNoCashFlow();
     //testPortfolioSimulationNoCashFlowUpRebalanced();
-    //testPickedPortfolios();
+    testPickedPortfolios();
     //testPortfolioSimulationDCA();
     //testPortfolioSimulationDCAVarious();
     //testPortfolioSimulationDCAPaths();

@@ -20,6 +20,26 @@ namespace igmdk{
         double theBondCoupon = 0.0323, double theInflationRate = 0.0235
 */
 
+/*defaults from early 2025
+        double theTaxRateCapitalGains = 0,
+        double theTaxRateFederal = 0, double theTaxRateLocal = 0,
+        double theBondTreasuryFraction = 0, double theStockReturn = 0.093,
+        double theStockStd = 0.17, double theBondReturn = 0.051,
+        double theBondStd = 0.085, double theStockBondCorrelation = 0,
+        double theRiskFreeRate = 0.046, double theStockDividend = 0.012,
+        double theBondCoupon = 0.034, double theInflationRate = 0.024
+*/
+
+/*defaults from early 2026
+double theTaxRateCapitalGains = 0,
+        double theTaxRateFederal = 0, double theTaxRateLocal = 0,
+        double theBondTreasuryFraction = 0, double theStockReturn = 0.088,
+        double theStockStd = 0.17, double theBondReturn = 0.046,
+        double theBondStd = 0.085, double theStockBondCorrelation = 0,
+        double theRiskFreeRate = 0.042, double theStockDividend = 0.011,
+        double theBondCoupon = 0.037, double theInflationRate = 0.023
+*/
+
 class ReturnSpecifier
 {//returns for funds of securities predicted
 //include NIIT and federal and capital gain taxes
@@ -56,14 +76,14 @@ public:
     double getInflationRate()const{return inflationRate;}
     double getRealRiskFreeRate()const
         {return getRiskFreeRate() - getInflationRate();}
-    //defaults need constant updating - calculated as of early 2025
+    //defaults calculated as of early 2026 - need constant updating
     ReturnSpecifier(double theTaxRateCapitalGains = 0,
         double theTaxRateFederal = 0, double theTaxRateLocal = 0,
-        double theBondTreasuryFraction = 0, double theStockReturn = 0.093,
-        double theStockStd = 0.17, double theBondReturn = 0.051,
+        double theBondTreasuryFraction = 0, double theStockReturn = 0.088,
+        double theStockStd = 0.17, double theBondReturn = 0.046,
         double theBondStd = 0.085, double theStockBondCorrelation = 0,
-        double theRiskFreeRate = 0.046, double theStockDividend = 0.012,
-        double theBondCoupon = 0.034, double theInflationRate = 0.024):
+        double theRiskFreeRate = 0.042, double theStockDividend = 0.011,
+        double theBondCoupon = 0.037, double theInflationRate = 0.023):
         stockReturn(theStockReturn), stockStd(theStockStd),
         bondReturn(theBondReturn), bondStd(theBondStd),
         stockBondCorrelation(theStockBondCorrelation),
